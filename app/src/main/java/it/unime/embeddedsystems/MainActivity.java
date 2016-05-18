@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.entity.StringEntity;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
       //  sensorManager.unregisterListener(this);
     }
 
-    private String POST(String serverUrl, String authorization, String command) {
+    private JSONObject POST(String serverUrl, String authorization, String command) {
         String response="";
         try{
             URL url = new URL(serverUrl);
@@ -123,14 +124,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
 
-        return response;
+
+        JSONObject result = null;
+        try {
+            result = new JSONObject(response);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private class Task extends AsyncTask<String, Void, Void>{
 
         @Override
         protected Void doInBackground(String... params) {
-            POST(params[0], params[1], params[2]);
+            JSONObject result = POST(params[0], params[1], params[2]);
             return null;
         }
 
