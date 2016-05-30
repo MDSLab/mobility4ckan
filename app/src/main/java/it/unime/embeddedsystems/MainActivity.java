@@ -1,13 +1,25 @@
 package it.unime.embeddedsystems;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,18 +36,36 @@ public class MainActivity extends AppCompatActivity {
 
     private SensorManager sensorManager;
     private Sensor tempSensor;
-    private TextView temperatureTXV;
+    private TextView locationText;
     private String serverUrl = "http://smartme-data.unime.it/api/3/action/datastore_upsert";
     private SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+
+    LocationManager locationManager;
+    Location mLocation;
+    LocationListener locationListener;
+
+    double latitude;
+    double longitude;
+
+    boolean isNetworkEnabled = false;
+    boolean canGetLocation = false;
+    boolean isGPSEnabled = false;
+
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10;
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1;
+    private int REQUEST_PERMISSION_LOCATION = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        temperatureTXV = (TextView) findViewById(R.id.txv_temperature);
+        locationText = (TextView) findViewById(R.id.txv_temperature);
+        //String command = "{\"resource_id\":\"c35b761d-8f4a-4b89-a68e-fcdb8063b636\", \"method\":\"insert\", \"records\":[{\"Type\":\"TYPE_ACCELEROMETER\",\"Model\":\"Accelerometer\",\"Unit\":\"m/s^2\",\"FabricName\":\"-\",\"ResourceID\":\"71ae4c3c-3f2b-4c31-ba09-1d83444327d2\",\"Date\":\"2016-05-13T12:00:00\"}]}";
+        //new Task().execute(serverUrl, authorization, command);
 
-        Gps gps = new Gps(getApplicationContext());
+        checkPermissionControl();
+    }
 
         temperatureTXV.setText("Latitudine: "+gps.getLatitude()+ "  Logitudine: "+gps.getLongitude());
 
@@ -46,6 +76,123 @@ public class MainActivity extends AppCompatActivity {
             new RegisterDevice().execute();
         }
     }
+    private void checkPermissionControl(){
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                new AlertDialog.Builder(this)
+                        .setMessage(getString(R.string.location_permission_request_text))
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSION_LOCATION);
+                                }
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .create()
+                        .show();
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSION_LOCATION);
+                }
+            }
+        } else {
+            enableGPS();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_PERMISSION_LOCATION) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                checkPermissionControl();
+            } else {
+                new AlertDialog.Builder(this)
+                        .setMessage(getString(R.string.location_permission_denied_text))
+                        .setPositiveButton("OK", null)
+                        .create()
+                        .show();
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            }
+        }
+    }
+
+    private void enableGPS() {
+        System.out.println("ENABLE GPS!!!");
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (!isGPSEnabled && !isNetworkEnabled) {
+            Toast.makeText(this, "Errore! GPS disabilitato o assenza di rete.", Toast.LENGTH_SHORT).show();
+        } else {
+            this.canGetLocation = true;
+            // First get location from Network Provider
+            if (isNetworkEnabled) {
+                System.out.println("ENTRO QUI");
+                //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,MIN_TIME_BW_UPDATES,MIN_DISTANCE_CHANGE_FOR_UPDATES, mContext);
+                if (locationManager != null) {
+
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    mLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    if (mLocation != null) {
+                        latitude = mLocation.getLatitude();
+                        longitude = mLocation.getLongitude();
+
+                        System.out.println("Lat: "+latitude+"   long: "+longitude);
+                    }
+                }
+            }
+            // if GPS Enabled get lat/long using GPS Services
+            if (isGPSEnabled) {
+                locationText.setText("GPS ATTIVO");
+                if (mLocation == null) {
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,MIN_TIME_BW_UPDATES,MIN_DISTANCE_CHANGE_FOR_UPDATES, locationListener);
+                    Log.d("GPS Enabled", "GPS Enabled");
+                  //  if (locationManager != null) {
+                        System.out.println("Entro in manager != null");
+                        mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        if (mLocation != null) {
+                            latitude = mLocation.getLatitude();
+                            longitude = mLocation.getLongitude();
+
+                            System.out.println("Lat: "+latitude+"   long: "+longitude);
+                        }
+                   // }
+                }
+            }
+        }
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                System.out.println("Latitude: "+mLocation.getLatitude()+"   Longitude: "+mLocation.getLongitude());
+                locationText.setText("Latitude: "+mLocation.getLatitude()+"   Longitude: "+mLocation.getLongitude());
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+    }
+
+
 
     @Override
     protected void onResume() {
