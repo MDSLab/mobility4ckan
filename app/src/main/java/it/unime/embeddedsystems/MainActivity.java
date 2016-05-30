@@ -1,12 +1,14 @@
 package it.unime.embeddedsystems;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,6 +20,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,17 +35,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LocationListener {
 
     private SensorManager sensorManager;
     private Sensor tempSensor;
     private TextView locationText;
-    private String serverUrl = "http://smartme-data.unime.it/api/3/action/datastore_upsert";
-    private SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+    private SharedPreferences sharedPref;
 
     LocationManager locationManager;
-    Location mLocation;
-    LocationListener locationListener;
+    String provider;
 
     double latitude;
     double longitude;
@@ -59,24 +60,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        sharedPref = getPreferences(Context.MODE_PRIVATE);
         locationText = (TextView) findViewById(R.id.txv_temperature);
-        //String command = "{\"resource_id\":\"c35b761d-8f4a-4b89-a68e-fcdb8063b636\", \"method\":\"insert\", \"records\":[{\"Type\":\"TYPE_ACCELEROMETER\",\"Model\":\"Accelerometer\",\"Unit\":\"m/s^2\",\"FabricName\":\"-\",\"ResourceID\":\"71ae4c3c-3f2b-4c31-ba09-1d83444327d2\",\"Date\":\"2016-05-13T12:00:00\"}]}";
-        //new Task().execute(serverUrl, authorization, command);
 
         checkPermissionControl();
-    }
-
-        temperatureTXV.setText("Latitudine: "+gps.getLatitude()+ "  Logitudine: "+gps.getLongitude());
 
 
-        boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered",false);
+        boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
 
-        if(!isDeviceRegistered){
+      /*  if(!isDeviceRegistered){
             new RegisterDevice().execute();
-        }
+        } */
     }
-    private void checkPermissionControl(){
+
+    @SuppressLint("NewApi")
+    private void checkPermissionControl() {
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) && (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
                 new AlertDialog.Builder(this)
@@ -84,18 +82,14 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSION_LOCATION);
-                                }
+                                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSION_LOCATION);
                             }
                         })
                         .setNegativeButton("Cancel", null)
                         .create()
                         .show();
             } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSION_LOCATION);
-                }
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_PERMISSION_LOCATION);
             }
         } else {
             enableGPS();
@@ -119,91 +113,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void enableGPS() {
-        System.out.println("ENABLE GPS!!!");
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-        if (!isGPSEnabled && !isNetworkEnabled) {
-            Toast.makeText(this, "Errore! GPS disabilitato o assenza di rete.", Toast.LENGTH_SHORT).show();
-        } else {
-            this.canGetLocation = true;
-            // First get location from Network Provider
-            if (isNetworkEnabled) {
-                System.out.println("ENTRO QUI");
-                //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,MIN_TIME_BW_UPDATES,MIN_DISTANCE_CHANGE_FOR_UPDATES, mContext);
-                if (locationManager != null) {
-
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    mLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    if (mLocation != null) {
-                        latitude = mLocation.getLatitude();
-                        longitude = mLocation.getLongitude();
-
-                        System.out.println("Lat: "+latitude+"   long: "+longitude);
-                    }
-                }
-            }
-            // if GPS Enabled get lat/long using GPS Services
-            if (isGPSEnabled) {
-                locationText.setText("GPS ATTIVO");
-                if (mLocation == null) {
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,MIN_TIME_BW_UPDATES,MIN_DISTANCE_CHANGE_FOR_UPDATES, locationListener);
-                    Log.d("GPS Enabled", "GPS Enabled");
-                  //  if (locationManager != null) {
-                        System.out.println("Entro in manager != null");
-                        mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        if (mLocation != null) {
-                            latitude = mLocation.getLatitude();
-                            longitude = mLocation.getLongitude();
-
-                            System.out.println("Lat: "+latitude+"   long: "+longitude);
-                        }
-                   // }
-                }
-            }
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getApplicationContext(), "Fallito", Toast.LENGTH_LONG).show();
+            return;
         }
-
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                System.out.println("Latitude: "+mLocation.getLatitude()+"   Longitude: "+mLocation.getLongitude());
-                locationText.setText("Latitude: "+mLocation.getLatitude()+"   Longitude: "+mLocation.getLongitude());
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-
-            }
-        };
-
+        Toast.makeText(getApplicationContext(), "Avviato", Toast.LENGTH_LONG).show();
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
-
-
 
     @Override
     protected void onResume() {
         super.onResume();
         //sensorManager.registerListener(this, tempSensor, SensorManager.SENSOR_DELAY_FASTEST);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-      //  sensorManager.unregisterListener(this);
+        //  sensorManager.unregisterListener(this);
     }
 
     private JSONObject POST(String serverUrl, String authorization, String command) {
@@ -242,6 +171,30 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return result;
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Toast.makeText(getApplicationContext(), "onLocationChanged", Toast.LENGTH_LONG).show();
+        System.out.println("on location changed: "+location.getLatitude()+" "+location.getLongitude());
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+        locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude));
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
     }
 
     private class RegisterDevice extends AsyncTask<String, Void, JSONObject>{
@@ -328,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
                 editor.putString("temperatureDatastoreUUID", data.getString("temperatureDatastoreUUID"));
                 editor.putString("pressureDatastoreUUID", data.getString("pressureDatastoreUUID"));
                 editor.putString("lightDatastoreUUID", data.getString("lightDatastoreUUID"));
-                editor.commit();
+                editor.apply();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -336,12 +289,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
     private class SendData extends AsyncTask<String, Void, Void> {
 
         void insertInDatastore(String measureUUID, String sensorName, String sensorValue, String lat, String lon, String date){
-            String command = "{\"resource_id\":\""+measureUUID+"\", \"method\":\"insert\", \"records\":[{\"Latitude\":\""+lat+"\",\"Altitude\":\"0\",\"Date\":\""+date+"\",\""+sensorName+"\":\""+sensorValue+"\",\"Longitude\":\"+"lon"+\"}]}";
+            String command = "{\"resource_id\":\""+measureUUID+"\", \"method\":\"insert\", \"records\":[{\"Latitude\":\""+lat+"\",\"Altitude\":\"0\",\"Date\":\""+date+"\",\""+sensorName+"\":\""+sensorValue+"\",\"Longitude\":\""+lon+"\"}]}";
             POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Insert in Datastore
         }
 
