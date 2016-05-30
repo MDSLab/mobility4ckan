@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor tempSensor;
     private TextView temperatureTXV;
     private String serverUrl = "http://smartme-data.unime.it/api/3/action/datastore_upsert";
-    private String authorization = "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae";
+
 
 
     @Override
@@ -142,17 +142,69 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return result;
     }
 
-    private class Task extends AsyncTask<String, Void, Void>{
+    private class RegisterDevice extends AsyncTask<String, Void, JSONObject>{
 
-        @Override
-        protected Void doInBackground(String... params) {
-            JSONObject result = POST(params[0], params[1], params[2]);
-            return null;
+        String createDataset(String datasetName){
+            String datasetUUID = "";
+            try {
+                String command = "{\"name\":\""+datasetName+"\", \"title\":\""+datasetName+"\", \"owner_org\":\"test\", \"extras\":{\"Label\":\"android-phone\",\"Manufacturer\":\"Android\", \"Model\":\"smartphone\",\"Altitude\":0,\"Latitude\":0,\"Longitude\":0}}";
+                JSONObject response = POST("http://smartme-data.unime.it/api/rest/dataset", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Dataset
+                datasetUUID = response.getString("id");
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
+            return datasetUUID;
+        }
+
+        String createDatastore(String datasetName, String datastoreName){
+            String datastoreUUID = "";
+            try {
+                String command = "{\"resource\": {\"package_id\":\""+datasetName+"\", \"name\":\""+datastoreName+"\"}, \"fields\": [ {\"id\": \"Type\", \"type\":\"text\"}, {\"id\": \"Model\", \"type\":\"text\"}, {\"id\": \"Unit\", \"type\":\"text\"}, {\"id\": \"FabricName\", \"type\":\"text\"}, {\"id\": \"ResourceID\", \"type\":\"text\"}, {\"id\": \"Date\", \"type\":\"timestamp\"}] }";
+                JSONObject response = POST("http://smartme-data.unime.it/api/3/action/datastore_create", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Datastore
+                JSONObject result = new JSONObject(response.getString("result"));
+                datastoreUUID = result.getString("resource_id");
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
+            return datastoreUUID;
+        }
+
+        void insertInSensorDatastore(String sensorUUID, String measureUUID, String type, String name, String unit){
+            String command = "{\"resource_id\":\""+sensorUUID+"\", \"method\":\"insert\", \"records\":[{\"Type\":\""+type+"\",\"Model\":\""+name+"\",\"Unit\":\""+unit+"\",\"FabricName\":\"-\",\"ResourceID\":\""+measureUUID+"\",\"Date\":\"2016-05-13T12:00:00\"}]}";
+            POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Datastore
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        protected JSONObject doInBackground(String... params) {
+            String datasetUUID = createDataset(params[0]);
+            String sensorsDatastoreUUID = createDatastore("","sensors");
+
+            String temperatureDatastoreUUID = createDatastore("","temperature");
+            insertInSensorDatastore(sensorsDatastoreUUID,temperatureDatastoreUUID, "TYPE_TEMPERATURE", "TEMPERATURE", "celsius");
+
+            String pressureDatastoreUUID = createDatastore("","pressure");
+            insertInSensorDatastore(sensorsDatastoreUUID,pressureDatastoreUUID, "TYPE_PRESSURE", "PRESSURE", "mbar");
+
+            String lightDatastoreUUID = createDatastore("","light");
+            insertInSensorDatastore(sensorsDatastoreUUID,lightDatastoreUUID, "TYPE_LIGHT", "LIGHT", "lx");
+
+            JSONObject data = null;
+            try {
+                data = new JSONObject();
+                data.put("datasetUUID", datasetUUID);
+                data.put("sensorsDatastoreUUID", sensorsDatastoreUUID);
+                data.put("temperatureDatastoreUUID", temperatureDatastoreUUID);
+                data.put("pressureDatastoreUUID", pressureDatastoreUUID);
+                data.put("lightDatastoreUUID", lightDatastoreUUID);
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject data) {
+
         }
 
     }
