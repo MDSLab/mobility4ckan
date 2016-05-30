@@ -28,7 +28,7 @@ import java.net.URL;
 import java.net.URLConnection;
 
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity {
 
     private SensorManager sensorManager;
     private Sensor tempSensor;
@@ -44,10 +44,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         temperatureTXV = (TextView) findViewById(R.id.txv_temperature);
 
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        sensorManager.registerListener(this, tempSensor , SensorManager.SENSOR_DELAY_NORMAL);
+        Gps gps = new Gps(getApplicationContext());
 
+        temperatureTXV.setText("Latitudine: "+gps.getLatitude()+ "  Logitudine: "+gps.getLongitude());
 
      /*   sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);*/
@@ -73,23 +72,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         String command = "{\"resource_id\":\"c35b761d-8f4a-4b89-a68e-fcdb8063b636\", \"method\":\"insert\", \"records\":[{\"Type\":\"TYPE_ACCELEROMETER\",\"Model\":\"Accelerometer\",\"Unit\":\"m/s^2\",\"FabricName\":\"-\",\"ResourceID\":\"71ae4c3c-3f2b-4c31-ba09-1d83444327d2\",\"Date\":\"2016-05-13T12:00:00\"}]}";
         //new Task().execute(serverUrl, authorization, command);
-    }
-
-    @Override
-    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
-
-    }
-
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-        // The light sensor returns a single value.
-        // Many sensors return 3 values, one for each axis.
-        float temp = event.values[0];
-        temperatureTXV.setText("TEMP: "+temp);
-
-
-        // Do something with this sensor value.
     }
 
     @Override

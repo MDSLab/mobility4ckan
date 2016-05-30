@@ -16,10 +16,10 @@ class MySensor {
     Context mContext;
 
     SensorManager sensorManager;
-    Sensor tempSensor, pressureSensor, crepuscolarSensor;
-    SensorEventListener tempSensorListener, pressureSensorListener, crepuscolarSensorListener;
+    Sensor tempSensor, pressureSensor, lightSensor;
+    SensorEventListener tempSensorListener, pressureSensorListener, lightSensorListener;
 
-    float currentTemp;
+    float currentTemp, currentPressure, currentLight;
 
     public MySensor(Context context) {
         mContext = context;
@@ -27,12 +27,15 @@ class MySensor {
         sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
 
         tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-        registerTempSensor(tempSensor);
+        pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-        // Inserisci qui pressure e crepuscolar
+        registerTempSensor();
+        registerPressureSensor();
+        registerLightSensor();
     }
 
-    void registerTempSensor(Sensor sensor){
+    void registerTempSensor(){
         tempSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
@@ -45,15 +48,56 @@ class MySensor {
             }
         };
 
-        sensorManager.registerListener(tempSensorListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(tempSensorListener, tempSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    void registerPressureSensor(){
+        pressureSensorListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                currentPressure = event.values[0];
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        };
+
+        sensorManager.registerListener(tempSensorListener, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    void registerLightSensor(){
+        lightSensorListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                currentLight = event.values[0];
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        };
+
+        sensorManager.registerListener(tempSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     public float getCurrentTemp(){
         return currentTemp;
     }
 
+    public float getCurrentPressure() {
+        return currentPressure;
+    }
+
+    public float getCurrentLight() {
+        return currentLight;
+    }
+
     public void unregisterSensorListener(){
         sensorManager.unregisterListener(tempSensorListener);
-        // RIMUOVI QUI pressureSensorListener e crepuscolarSensorListener
+        sensorManager.unregisterListener(pressureSensorListener);
+        sensorManager.unregisterListener(lightSensorListener);
     }
 }
