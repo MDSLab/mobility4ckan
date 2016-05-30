@@ -33,6 +33,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
@@ -309,6 +312,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    private String getCurrentDate(){
+        Date date = new Date();
+        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm:ss");
+        String currDate = formatDate.format(date);
+        String currTime = formatTime.format(date);
+
+        return currDate+"T"+currTime;
+    }
 
 
 
