@@ -39,7 +39,8 @@ class MySensor {
         tempSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                currentTemp = event.values[0];
+                if(event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE)
+                    currentTemp = event.values[0];
             }
 
             @Override
@@ -55,7 +56,11 @@ class MySensor {
         pressureSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                currentPressure = event.values[0];
+                System.out.println("Type sensor pressure: "+event.sensor.getName());
+                if(event.sensor.getType() == Sensor.TYPE_PRESSURE){
+                    currentPressure = event.values[0];
+                    System.out.println("Pressure: "+currentPressure);
+                }
             }
 
             @Override
@@ -64,14 +69,18 @@ class MySensor {
             }
         };
 
-        sensorManager.registerListener(tempSensorListener, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(pressureSensorListener, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     void registerLightSensor(){
         lightSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                currentLight = event.values[0];
+                System.out.println("Type sensor light: "+event.sensor.getName());
+                if(event.sensor.getType() == Sensor.TYPE_LIGHT) {
+                    currentLight = event.values[0];
+                    System.out.println("LIGHT: "+currentLight);
+                }
             }
 
             @Override
@@ -80,7 +89,7 @@ class MySensor {
             }
         };
 
-        sensorManager.registerListener(tempSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     public float getCurrentTemp(){

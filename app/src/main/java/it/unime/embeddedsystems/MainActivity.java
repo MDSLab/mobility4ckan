@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     void sendTask(){
         boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
         if(!isDeviceRegistered && !isRegistering){
-            new RegisterDevice().execute("android_test_23"); //+android.os.Build.MODEL
+            new RegisterDevice().execute("android_test_51"); //+android.os.Build.MODEL
             isRegistering=true;
             return;
         }
