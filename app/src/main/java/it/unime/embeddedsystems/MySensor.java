@@ -49,17 +49,15 @@ class MySensor {
             }
         };
 
-        sensorManager.registerListener(tempSensorListener, tempSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(tempSensorListener, tempSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     void registerPressureSensor(){
         pressureSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                System.out.println("Type sensor pressure: "+event.sensor.getName());
                 if(event.sensor.getType() == Sensor.TYPE_PRESSURE){
                     currentPressure = event.values[0];
-                    System.out.println("Pressure: "+currentPressure);
                 }
             }
 
@@ -69,17 +67,15 @@ class MySensor {
             }
         };
 
-        sensorManager.registerListener(pressureSensorListener, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(pressureSensorListener, pressureSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     void registerLightSensor(){
         lightSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                System.out.println("Type sensor light: "+event.sensor.getName());
                 if(event.sensor.getType() == Sensor.TYPE_LIGHT) {
                     currentLight = event.values[0];
-                    System.out.println("LIGHT: "+currentLight);
                 }
             }
 
@@ -89,7 +85,7 @@ class MySensor {
             }
         };
 
-        sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     public float getCurrentTemp(){
