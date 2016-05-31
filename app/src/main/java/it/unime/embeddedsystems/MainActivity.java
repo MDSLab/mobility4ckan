@@ -54,6 +54,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setContentView(R.layout.activity_main);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         locationText = (TextView) findViewById(R.id.txv_gps);
+        currentTempText = (TextView) findViewById(R.id.txv_temp);
+        currentPressureText = (TextView) findViewById(R.id.txv_pressure);
+        currentLightText =( TextView) findViewById(R.id.txv_light);
+        currentTimeText = (TextView) findViewById(R.id.txv_data);
 
         checkPermissionControl();
         mySensor = new MySensor(this);
@@ -81,9 +85,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
            return;
         }
 
-        float currentTemp = mySensor.getCurrentTemp();
-        float currentPressure = mySensor.getCurrentPressure();
-        float currentLight = mySensor.getCurrentLight();
+        final float currentTemp = mySensor.getCurrentTemp();
+        final float currentPressure = mySensor.getCurrentPressure();
+        final float currentLight = mySensor.getCurrentLight();
+        final String currentDate = getCurrentDate();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                currentTempText.setText(""+currentTemp);
+                currentPressureText.setText(""+currentPressure);
+                currentLightText.setText(""+currentLight);
+                currentTimeText.setText(currentDate);
+            }
+        });
 
         String[] temperature = {
                 sharedPref.getString("temperatureDatastoreUUID",""),
@@ -91,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 ""+currentTemp,
                 ""+latitude,
                 ""+longitude,
-                getCurrentDate()
+                currentDate
         };
         new SendData().execute(temperature);
 
@@ -101,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 ""+currentPressure,
                 ""+latitude,
                 ""+longitude,
-                getCurrentDate()
+                currentDate
         };
         new SendData().execute(pressure);
 
@@ -111,11 +126,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 ""+currentLight,
                 ""+latitude,
                 ""+longitude,
-                getCurrentDate()
+                currentDate
         };
         new SendData().execute(light);
-
-        Toast.makeText(this, "Dati Inviati", Toast.LENGTH_LONG).show();
 
     }
 
@@ -164,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             Toast.makeText(getApplicationContext(), "Fallito", Toast.LENGTH_LONG).show();
             return;
         }
-        Toast.makeText(getApplicationContext(), "Avviato", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
 
@@ -224,7 +237,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onLocationChanged(Location location) {
-       // Toast.makeText(getApplicationContext(), "onLocationChanged", Toast.LENGTH_LONG).show();
         System.out.println("on location changed: "+location.getLatitude()+" "+location.getLongitude());
         latitude = location.getLatitude();
         longitude = location.getLongitude();
