@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private void enableGPS() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getApplicationContext(), "Fallito", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Avvio GPS Fallito", Toast.LENGTH_LONG).show();
             return;
         }
         Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
@@ -218,7 +218,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 response = response + "" + responseReader;
             }
 
-            System.out.println("ASD: "+response);
             conn.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
@@ -237,7 +236,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onLocationChanged(Location location) {
-        System.out.println("on location changed: "+location.getLatitude()+" "+location.getLongitude());
         latitude = location.getLatitude();
         longitude = location.getLongitude();
         locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude));

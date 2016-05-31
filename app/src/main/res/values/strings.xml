@@ -4,4 +4,10 @@
     <string name="location_permission_denied_text">Permesso negato! l\'applicazione non può funzionare senza GPS!</string>
     <string name="attendo_gps">Attendo GPS...</string>
     <string name="attendo_il_primo_invio">Attendo il primo invio</string>
+    <string name="posizione_corrente">Posizione corrente:</string>
+    <string name="dati_ultimo_invio">Dati ultimo invio:</string>
+    <string name="ultima_pressione">Ultima Pressione:</string>
+    <string name="ultima_luce">Ultima Luce:</string>
+    <string name="data_ultimo_invio">Data ultimo invio:</string>
+    <string name="ultima_temperatura">Ultima temperatura:</string>
 </resources>
