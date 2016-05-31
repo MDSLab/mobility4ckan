@@ -2,4 +2,5 @@
     <string name="app_name">Embedded System</string>
     <string name="location_permission_request_text">Autorizzi l\'applicazione ad utilizzare il GPS?</string>
     <string name="location_permission_denied_text">Permesso negato! l\'applicazione non può funzionare senza GPS!</string>
+    <string name="attendo_gps">Attendo GPS...</string>
 </resources>

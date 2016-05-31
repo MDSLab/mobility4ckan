@@ -12,9 +12,9 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Placeholder"
+        android:text="@string/attendo_gps"
         android:layout_alignParentRight="false"
         android:layout_alignParentLeft="false"
         android:gravity="center_vertical|center_horizontal"
-        android:id="@+id/txv_temperature" />
+        android:id="@+id/txv_gps" />
 </RelativeLayout>

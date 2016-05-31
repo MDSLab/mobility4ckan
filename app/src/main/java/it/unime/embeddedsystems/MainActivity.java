@@ -6,21 +6,16 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,46 +29,94 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
-    private SensorManager sensorManager;
-    private Sensor tempSensor;
-    private TextView locationText;
+    private TextView locationText, currentTempText, currentPressureText, currentLightText, currentTimeText;
     private SharedPreferences sharedPref;
 
-    LocationManager locationManager;
-    String provider;
+    private int REQUEST_PERMISSION_LOCATION = 1;
 
+    boolean isRegistering = false;
+    boolean isGPSReady = false;
     double latitude;
     double longitude;
 
-    boolean isNetworkEnabled = false;
-    boolean canGetLocation = false;
-    boolean isGPSEnabled = false;
-
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10;
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1;
-    private int REQUEST_PERMISSION_LOCATION = 1;
+    private MySensor mySensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
-        locationText = (TextView) findViewById(R.id.txv_temperature);
+        locationText = (TextView) findViewById(R.id.txv_gps);
 
         checkPermissionControl();
+        mySensor = new MySensor(this);
+
+        Timer sendTimer = new Timer();
+        sendTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                sendTask();
+            }
+        }, 0, 60 * 1000);
+
+    }
 
 
+    void sendTask(){
         boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
+        if(!isDeviceRegistered && !isRegistering){
+            new RegisterDevice().execute("android_test_23"); //+android.os.Build.MODEL
+            isRegistering=true;
+            return;
+        }
 
-      /*  if(!isDeviceRegistered){
-            new RegisterDevice().execute();
-        } */
+        if(!isDeviceRegistered || !isGPSReady) {
+           return;
+        }
+
+        float currentTemp = mySensor.getCurrentTemp();
+        float currentPressure = mySensor.getCurrentPressure();
+        float currentLight = mySensor.getCurrentLight();
+
+        String[] temperature = {
+                sharedPref.getString("temperatureDatastoreUUID",""),
+                "Temperature",
+                ""+currentTemp,
+                ""+latitude,
+                ""+longitude,
+                getCurrentDate()
+        };
+        new SendData().execute(temperature);
+
+        String[] pressure = {
+                sharedPref.getString("pressureDatastoreUUID",""),
+                "Pressure",
+                ""+currentPressure,
+                ""+latitude,
+                ""+longitude,
+                getCurrentDate()
+        };
+        new SendData().execute(pressure);
+
+        String[] light = {
+                sharedPref.getString("lightDatastoreUUID",""),
+                "Light",
+                ""+currentLight,
+                ""+latitude,
+                ""+longitude,
+                getCurrentDate()
+        };
+        new SendData().execute(light);
+
+        Toast.makeText(this, "Dati Inviati", Toast.LENGTH_LONG).show();
+
     }
 
     @SuppressLint("NewApi")
@@ -128,18 +171,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     protected void onResume() {
         super.onResume();
-        //sensorManager.registerListener(this, tempSensor, SensorManager.SENSOR_DELAY_FASTEST);
-
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //  sensorManager.unregisterListener(this);
     }
 
     private JSONObject POST(String serverUrl, String authorization, String command) {
-        String response="";
+        String responseReader="";
+        String response = "";
         try{
             URL url = new URL(serverUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -152,25 +193,30 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             os.write(command.getBytes());
             os.flush();
 
-            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            int httpResult = conn.getResponseCode();
+
+            if (httpResult < 200 && httpResult > 300) {
                 throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
 
             BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
 
-            while ((response = br.readLine()) != null) {
-                System.out.println(response);
+            while ((responseReader = br.readLine()) != null) {
+                response = response + "" + responseReader;
             }
+
+            System.out.println("ASD: "+response);
             conn.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-
         JSONObject result = null;
         try {
+            System.out.println(serverUrl+"pre-catch result: "+response);
             result = new JSONObject(response);
         } catch (JSONException e) {
+            System.out.println("catch result: "+response);
             e.printStackTrace();
         }
         return result;
@@ -178,11 +224,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onLocationChanged(Location location) {
-        Toast.makeText(getApplicationContext(), "onLocationChanged", Toast.LENGTH_LONG).show();
+       // Toast.makeText(getApplicationContext(), "onLocationChanged", Toast.LENGTH_LONG).show();
         System.out.println("on location changed: "+location.getLatitude()+" "+location.getLongitude());
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
         locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude));
+        isGPSReady = true;
     }
 
     @Override
@@ -217,7 +264,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         String createSensorDatastore(String datasetName, String datastoreName, String modelName){
             String datastoreUUID = "";
             try {
-                String command = "{\"resource\": {\"package_id\":\""+datasetName+"\", \"name\":\""+datastoreName+"\"}, \"fields\": [ {\"id\": \"Type\", \"type\":\"text\"}, {\"id\": "+modelName+", \"type\":\"text\"}, {\"id\": \"Unit\", \"type\":\"text\"}, {\"id\": \"FabricName\", \"type\":\"text\"}, {\"id\": \"ResourceID\", \"type\":\"text\"}, {\"id\": \"Date\", \"type\":\"timestamp\"}] }";
+                String command = "{\"resource\": {\"package_id\":\""+datasetName+"\", \"name\":\""+datastoreName+"\"}, \"fields\": [ {\"id\": \"Type\", \"type\":\"text\"}, {\"id\": \"Model\", \"type\":\"text\"}, {\"id\": \"Unit\", \"type\":\"text\"}, {\"id\": \"FabricName\", \"type\":\"text\"}, {\"id\": \"ResourceID\", \"type\":\"text\"}, {\"id\": \"Date\", \"type\":\"timestamp\"}] }";
+
                 JSONObject response = POST("http://smartme-data.unime.it/api/3/action/datastore_create", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Datastore
                 JSONObject result = new JSONObject(response.getString("result"));
                 datastoreUUID = result.getString("resource_id");
@@ -243,26 +291,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         void insertInSensorDatastore(String sensorUUID, String measureUUID, String type, String name, String unit){
             String command = "{\"resource_id\":\""+sensorUUID+"\", \"method\":\"insert\", \"records\":[{\"Type\":\""+type+"\",\"Model\":\""+name+"\",\"Unit\":\""+unit+"\",\"FabricName\":\"-\",\"ResourceID\":\""+measureUUID+"\",\"Date\":\"2016-05-13T12:00:00\"}]}";
+
             POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Insert in Datastore
         }
 
         @Override
         protected JSONObject doInBackground(String... params) {
             String datasetUUID = createDataset(params[0]);
-            String sensorsDatastoreUUID = createSensorDatastore("","sensors","Model");
+            String sensorsDatastoreUUID = createSensorDatastore(params[0],"sensors","Model");
 
-            String temperatureDatastoreUUID = createDatastore("","temperature","Temperature");
+            String temperatureDatastoreUUID = createDatastore(params[0],"temperature","Temperature");
             insertInSensorDatastore(sensorsDatastoreUUID,temperatureDatastoreUUID, "TYPE_TEMPERATURE", "TEMPERATURE", "celsius");
 
-            String pressureDatastoreUUID = createDatastore("","pressure", "Pressure");
+            String pressureDatastoreUUID = createDatastore(params[0],"pressure", "Pressure");
             insertInSensorDatastore(sensorsDatastoreUUID,pressureDatastoreUUID, "TYPE_PRESSURE", "PRESSURE", "mbar");
 
-            String lightDatastoreUUID = createDatastore("","light", "Light");
+            String lightDatastoreUUID = createDatastore(params[0],"light", "Light");
             insertInSensorDatastore(sensorsDatastoreUUID,lightDatastoreUUID, "TYPE_LIGHT", "LIGHT", "lx");
 
             JSONObject data = null;
             try {
                 data = new JSONObject();
+                data.put("datasetName",params[0]);
                 data.put("datasetUUID", datasetUUID);
                 data.put("sensorsDatastoreUUID", sensorsDatastoreUUID);
                 data.put("temperatureDatastoreUUID", temperatureDatastoreUUID);
@@ -279,6 +329,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             try {
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.putBoolean("isDeviceRegistered", true);
+                editor.putString("datasetName", data.getString("datasetName"));
                 editor.putString("datasetUUID", data.getString("datasetUUID"));
                 editor.putString("sensorsDatastoreUUID", data.getString("sensorsDatastoreUUID"));
                 editor.putString("temperatureDatastoreUUID", data.getString("temperatureDatastoreUUID"));
