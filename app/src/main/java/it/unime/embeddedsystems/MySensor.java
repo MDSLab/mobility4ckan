@@ -6,11 +6,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import java.util.List;
-
-/**
- * Created by andfa on 18/05/2016.
- */
 class MySensor {
 
     Context mContext;

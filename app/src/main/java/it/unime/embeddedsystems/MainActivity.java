@@ -10,12 +10,15 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,16 +39,16 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
-    private TextView locationText, currentTempText, currentPressureText, currentLightText, currentTimeText;
+    private TextView locationText, currentTempText, currentPressureText, currentLightText, currentTimeText, countdownText, datasetNameText;
+    private Button sendNowBtn;
     private SharedPreferences sharedPref;
-
     private int REQUEST_PERMISSION_LOCATION = 1;
-
-    boolean isRegistering = false;
-    boolean isGPSReady = false;
-    double latitude;
-    double longitude;
-
+    private int countdown = 60*1000;
+    private String datasetName = "android_test_26";
+    private boolean isRegistering = false;
+    private boolean isGPSReady = false;
+    private double latitude;
+    private double longitude;
     private MySensor mySensor;
 
     @Override
@@ -56,9 +59,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         locationText = (TextView) findViewById(R.id.txv_gps);
         currentTempText = (TextView) findViewById(R.id.txv_temp);
         currentPressureText = (TextView) findViewById(R.id.txv_pressure);
-        currentLightText =( TextView) findViewById(R.id.txv_light);
+        currentLightText = (TextView) findViewById(R.id.txv_light);
         currentTimeText = (TextView) findViewById(R.id.txv_data);
-
+        countdownText = (TextView) findViewById(R.id.txv_countdown);
+        datasetNameText = (TextView) findViewById(R.id.txv_dataset) ;
+        datasetNameText.setText(datasetName);
+        sendNowBtn = (Button) findViewById(R.id.btn_invia);
+        sendNowBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendTask(false);
+            }
+        });
         checkPermissionControl();
         mySensor = new MySensor(this);
 
@@ -66,69 +78,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         sendTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                sendTask();
+                sendTask(true);
             }
-        }, 0, 60 * 1000);
-
-    }
-
-
-    void sendTask(){
-        boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
-        if(!isDeviceRegistered && !isRegistering){
-            new RegisterDevice().execute("android_test_52"); //+android.os.Build.MODEL
-            isRegistering=true;
-            return;
-        }
-
-        if(!isDeviceRegistered || !isGPSReady) {
-           return;
-        }
-
-        final float currentTemp = mySensor.getCurrentTemp();
-        final float currentPressure = mySensor.getCurrentPressure();
-        final float currentLight = mySensor.getCurrentLight();
-        final String currentDate = getCurrentDate();
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                currentTempText.setText(""+currentTemp);
-                currentPressureText.setText(""+currentPressure);
-                currentLightText.setText(""+currentLight);
-                currentTimeText.setText(currentDate);
-            }
-        });
-
-        String[] temperature = {
-                sharedPref.getString("temperatureDatastoreUUID",""),
-                "Temperature",
-                ""+currentTemp,
-                ""+latitude,
-                ""+longitude,
-                currentDate
-        };
-        new SendData().execute(temperature);
-
-        String[] pressure = {
-                sharedPref.getString("pressureDatastoreUUID",""),
-                "Pressure",
-                ""+currentPressure,
-                ""+latitude,
-                ""+longitude,
-                currentDate
-        };
-        new SendData().execute(pressure);
-
-        String[] light = {
-                sharedPref.getString("lightDatastoreUUID",""),
-                "Light",
-                ""+currentLight,
-                ""+latitude,
-                ""+longitude,
-                currentDate
-        };
-        new SendData().execute(light);
+        }, 0, countdown);
 
     }
 
@@ -171,16 +123,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-    private void enableGPS() {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getApplicationContext(), "Avvio GPS Fallito", Toast.LENGTH_LONG).show();
-            return;
-        }
-        Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -189,6 +131,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(mySensor!=null)
+            mySensor.unregisterSensorListener();
     }
 
     private JSONObject POST(String serverUrl, String authorization, String command) {
@@ -257,6 +206,95 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
+    private void enableGPS() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getApplicationContext(), "Avvio GPS Fallito", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+    }
+
+    private String getCurrentDate(){
+        Date date = new Date();
+        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm:ss");
+        String currDate = formatDate.format(date);
+        String currTime = formatTime.format(date);
+
+        return currDate+"T"+currTime;
+    }
+
+    void sendTask(final boolean shouldUpdateCountdown){
+        boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
+        if(!isDeviceRegistered && !isRegistering){
+            new RegisterDevice().execute(datasetName);
+            isRegistering=true;
+            return;
+        }
+
+        if(!isDeviceRegistered || !isGPSReady) {
+            return;
+        }
+
+        final float currentTemp = mySensor.getCurrentTemp();
+        final float currentPressure = mySensor.getCurrentPressure();
+        final float currentLight = mySensor.getCurrentLight();
+        final String currentDate = getCurrentDate();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                currentTempText.setText(""+currentTemp);
+                currentPressureText.setText(""+currentPressure);
+                currentLightText.setText(""+currentLight);
+                currentTimeText.setText(currentDate);
+                if(shouldUpdateCountdown) {
+                    new CountDownTimer(countdown, 1000) {
+                        public void onTick(long millisUntilFinished) {
+                            countdownText.setText("" + millisUntilFinished / 1000);
+                        }
+
+                        public void onFinish() {
+                        }
+                    }.start();
+                }
+            }
+        });
+
+        String[] temperature = {
+                sharedPref.getString("temperatureDatastoreUUID",""),
+                "Temperature",
+                ""+currentTemp,
+                ""+latitude,
+                ""+longitude,
+                currentDate
+        };
+        new SendData().execute(temperature);
+
+        String[] pressure = {
+                sharedPref.getString("pressureDatastoreUUID",""),
+                "Pressure",
+                ""+currentPressure,
+                ""+latitude,
+                ""+longitude,
+                currentDate
+        };
+        new SendData().execute(pressure);
+
+        String[] light = {
+                sharedPref.getString("lightDatastoreUUID",""),
+                "Light",
+                ""+currentLight,
+                ""+latitude,
+                ""+longitude,
+                currentDate
+        };
+        new SendData().execute(light);
+
+    }
+
     private class RegisterDevice extends AsyncTask<String, Void, JSONObject>{
 
         String createDataset(String datasetName){
@@ -271,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             return datasetUUID;
         }
 
-        String createSensorDatastore(String datasetName, String datastoreName, String modelName){
+        String createSensorDatastore(String datasetName, String datastoreName){
             String datastoreUUID = "";
             try {
                 String command = "{\"resource\": {\"package_id\":\""+datasetName+"\", \"name\":\""+datastoreName+"\"}, \"fields\": [ {\"id\": \"Type\", \"type\":\"text\"}, {\"id\": \"Model\", \"type\":\"text\"}, {\"id\": \"Unit\", \"type\":\"text\"}, {\"id\": \"FabricName\", \"type\":\"text\"}, {\"id\": \"ResourceID\", \"type\":\"text\"}, {\"id\": \"Date\", \"type\":\"timestamp\"}] }";
@@ -308,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         @Override
         protected JSONObject doInBackground(String... params) {
             String datasetUUID = createDataset(params[0]);
-            String sensorsDatastoreUUID = createSensorDatastore(params[0],"sensors","Model");
+            String sensorsDatastoreUUID = createSensorDatastore(params[0],"sensors");
 
             String temperatureDatastoreUUID = createDatastore(params[0],"temperature","Temperature");
             insertInSensorDatastore(sensorsDatastoreUUID,temperatureDatastoreUUID, "TYPE_TEMPERATURE", "TEMPERATURE", "celsius");
@@ -372,22 +410,5 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             return null;
         }
     }
-
-    private String getCurrentDate(){
-        Date date = new Date();
-        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm:ss");
-        String currDate = formatDate.format(date);
-        String currTime = formatTime.format(date);
-
-        return currDate+"T"+currTime;
-    }
-
-
-
-
-
-
-
 
 }

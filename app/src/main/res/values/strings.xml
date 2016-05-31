@@ -10,4 +10,9 @@
     <string name="ultima_luce">Ultima Luce:</string>
     <string name="data_ultimo_invio">Data ultimo invio:</string>
     <string name="ultima_temperatura">Ultima temperatura:</string>
+    <string name="prossimo_invio_tra_secondi">Prossimo invio tra secondi:</string>
+    <string name="placeholder_countdown">- (GPS non ancora pronto)</string>
+    <string name="invia_ora">Invia ora</string>
+    <string name="nome_dataset">Nome dataset:</string>
+    <string name="placeholder">-</string>
 </resources>
