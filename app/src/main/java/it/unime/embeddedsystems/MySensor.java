@@ -97,61 +97,6 @@ class MySensor{
                         currentLinearAcceleration[2] = event.values[0];
                         break;
 
-                    case Sensor.TYPE_PRESSURE:
-                        currentPressure = event.values[0];  // hPa o mbar
-                        break;
-                    case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
-                        currentHumidity = event.values[0];
-                        break;
-
-                    default:
-                        break;
-                }
-
-                    case Sensor.TYPE_LIGHT:    // lx
-                        currentLight = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_ACCELEROMETER:    // m/s2
-                        currentAcceleration[0] = event.values[0];
-                        currentAcceleration[1] = event.values[0];
-                        currentAcceleration[2] = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_GYROSCOPE:     // rad/s
-                        currentGyroscope[0] = event.values[0];
-                        currentGyroscope[1] = event.values[0];
-                        currentGyroscope[2] = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_MAGNETIC_FIELD:    // μT
-                        currentMagnetic[0] = event.values[0];
-                        currentMagnetic[1] = event.values[0];
-                        currentMagnetic[2] = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_PROXIMITY:     // cm
-                        currentProximity = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
-                        currentRotation[0] = event.values[0];
-                        currentRotation[1] = event.values[0];
-                        currentRotation[2] = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_GRAVITY:      // m/s2
-                        currentGravity[0] = event.values[0];
-                        currentGravity[1] = event.values[0];
-                        currentGravity[2] = event.values[0];
-                        break;
-
-                    case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
-                        currentLinearAcceleration[0] = event.values[0];
-                        currentLinearAcceleration[1] = event.values[0];
-                        currentLinearAcceleration[2] = event.values[0];
-                        break;
-
                     case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
                         currentHumidity = event.values[0];
                         break;
