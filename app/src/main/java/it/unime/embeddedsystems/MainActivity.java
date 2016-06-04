@@ -43,9 +43,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
@@ -60,9 +62,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
-    List<Sensor> sensorList;
-
-    private Bundle bundle;
+    private List<Sensor> sensorList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,9 +87,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         checkPermissionControl();
         mySensor = new MySensor(this);
 
-        bundle = getIntent().getExtras();
-        if(bundle != null)
-            sensorList = bundle.getParcelable("sensorList");
+
+        sensorList = SensorConfig.sensorList;
+
+
 
         System.out.println("Sensor List: "+sensorList);
 

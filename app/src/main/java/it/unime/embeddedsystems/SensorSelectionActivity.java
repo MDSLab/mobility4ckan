@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,7 +26,6 @@ public class SensorSelectionActivity extends AppCompatActivity {
     SensorManager sensorManager;
 
     List<Sensor> list;
-    List<Sensor> sensorList = new ArrayList<>();
     List<String> nameSensorList = new ArrayList<>();
 
     ArrayAdapter adapter;
@@ -55,13 +53,13 @@ public class SensorSelectionActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (isSelected){
                     view.setBackgroundColor(Color.WHITE);
-                    sensorList.remove(list.get(position));
+       // FIXME             sensorList.remove(list.get(position));
 
                     isSelected = false;
                     //view.setSelected(false);
                 }else {
                     view.setBackgroundColor(Color.parseColor("#99cc00"));
-                    sensorList.add(list.get(position));
+                    SensorConfig.sensorList.add(list.get(position));
 
                     isSelected = true;
                 }
@@ -71,13 +69,9 @@ public class SensorSelectionActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("size sensor: "+sensorList.size());
-                Intent intent = new Intent(SensorSelectionActivity.this, MainActivity.class);
-                //intent.putParcelableArrayListExtra("sensorList", list);
-                /*intent.putParcelableArrayListExtra("sensorList", sensorList);*/
-                Bundle bundle = new Bundle();
-                //bundle.putParcelableArray("sensorList", list);
-                startActivity(intent, bundle);
+                System.out.println("size sensor: "+SensorConfig.sensorList.size());
+                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                startActivity(intent);
             }
         });
 
