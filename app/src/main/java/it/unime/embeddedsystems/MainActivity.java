@@ -1,3 +1,13 @@
+/* TODO:
+*  1) Sensori selezionabili
+*  2) Cambiare layout
+*  3) Scegliere nome dataset e fare controlli su CKAN
+*  4) Controlli su WIFI e GPS
+*  5) Invio per spostamento (ogni tot metri)
+*  6) Vedere se siamo a piedi o in macchina
+*/
+
+
 package it.unime.embeddedsystems;
 
 import android.Manifest;
@@ -47,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private SharedPreferences sharedPref;
     private int REQUEST_PERMISSION_LOCATION = 1;
     private int countdown = 60*1000;
-    private String datasetName = "android_test_26";
+    private String datasetName = "android_test_27"; // cambiare
     private boolean isRegistering = false;
     private boolean isGPSReady = false;
     private double latitude;

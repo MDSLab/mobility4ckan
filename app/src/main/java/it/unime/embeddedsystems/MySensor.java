@@ -108,7 +108,6 @@ class MySensor{
         sensorManager.registerListener(sensorListener, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
-
     void registerTempSensor(){
         tempSensorListener = new SensorEventListener() {
             @Override

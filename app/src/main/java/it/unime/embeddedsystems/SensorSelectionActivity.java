@@ -25,7 +25,6 @@ public class SensorSelectionActivity extends AppCompatActivity {
     Button button;
 
     SensorManager sensorManager;
-    MySensor mySensor;
 
     List<Sensor> list;
     List<Sensor> sensorList = new ArrayList<>();
@@ -41,7 +40,6 @@ public class SensorSelectionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sensor_selection);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         listView = (ListView) findViewById(R.id.selection_listview);
-        mySensor = new MySensor(getApplicationContext());
         list = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
         button = (Button)findViewById(R.id.button);
@@ -73,7 +71,6 @@ public class SensorSelectionActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mySensor.setSensorList(sensorList);
                 System.out.println("size sensor: "+sensorList.size());
                 Intent intent = new Intent(SensorSelectionActivity.this, MainActivity.class);
                 //intent.putParcelableArrayListExtra("sensorList", list);
