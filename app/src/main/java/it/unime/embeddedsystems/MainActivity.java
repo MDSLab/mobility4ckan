@@ -13,7 +13,6 @@ package it.unime.embeddedsystems;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -44,11 +43,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
@@ -95,9 +92,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             sensorList = bundle.getParcelable("sensorList");
 
         System.out.println("Sensor List: "+sensorList);
-
-
-
 
         Timer sendTimer = new Timer();
         /*sendTimer.schedule(new TimerTask() {

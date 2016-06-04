@@ -17,7 +17,8 @@ class MySensor{
     Sensor tempSensor, pressureSensor, lightSensor;
     SensorEventListener tempSensorListener, pressureSensorListener, lightSensorListener;
 
-    float currentTemp, currentPressure, currentLight;
+    float currentTemp, currentPressure, currentLight, currentHumidity, currentProximity;
+    float[] currentAcceleration, currentGyroscope, currentMagnetic, currentRotation, currentGravity, currentLinearAcceleration;
 
     List<Sensor> sensorList = new ArrayList<>();
 
@@ -27,75 +28,82 @@ class MySensor{
 
         sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
 
-        tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        /*tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
         pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-
-        System.out.println("size: "+getSensorList().size()+"    "+sensorList.size());
-
-        for (int k = 0; k < getSensorList().size(); k++) {
-            System.out.println("TIKKITI: " + getSensorList().get(k));
-        }
 
         registerTempSensor();
         registerPressureSensor();
         registerLightSensor();
+
+        */
     }
 
-    void registerSensor(Sensor mSensor){
+    public void registerSensor(Sensor mSensor){
         SensorEventListener sensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                float currentValue;
-                float currentValue1;
-                float currentValue2;
 
-                if(event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE)// Gradi Celsius (°C)
-                    currentValue = event.values[0];
-                if(event.sensor.getType() == Sensor.TYPE_PRESSURE)// hPa o mbar
-                    currentValue = event.values[0];
-                if(event.sensor.getType() == Sensor.TYPE_LIGHT)// lx
-                    currentValue = event.values[0];
-                if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {// m/s2
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE){// rad/s
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){// μT
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_PROXIMITY)// cm
-                    currentValue = event.values[0];
-                if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR){// metrica sconosciuta
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_GRAVITY){// m/s2
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){// m/s2
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_ORIENTATION){//DEPRECATO
-                    currentValue = event.values[0];
-                    currentValue1 = event.values[0];
-                    currentValue2 = event.values[0];
-                }
-                if(event.sensor.getType() == Sensor.TYPE_RELATIVE_HUMIDITY)// %
-                    currentValue = event.values[0];
+                switch (event.sensor.getType()){
+                    case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
+                        currentTemp = event.values[0];
+                        break;
 
+                    case Sensor.TYPE_PRESSURE:
+                        currentPressure = event.values[0];  // hPa o mbar
+                        break;
+
+                    case Sensor.TYPE_LIGHT:    // lx
+                        currentLight = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_ACCELEROMETER:    // m/s2
+                        currentAcceleration[0] = event.values[0];
+                        currentAcceleration[1] = event.values[0];
+                        currentAcceleration[2] = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_GYROSCOPE:     // rad/s
+                        currentGyroscope[0] = event.values[0];
+                        currentGyroscope[1] = event.values[0];
+                        currentGyroscope[2] = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_MAGNETIC_FIELD:    // μT
+                        currentMagnetic[0] = event.values[0];
+                        currentMagnetic[1] = event.values[0];
+                        currentMagnetic[2] = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_PROXIMITY:     // cm
+                        currentProximity = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
+                        currentRotation[0] = event.values[0];
+                        currentRotation[1] = event.values[0];
+                        currentRotation[2] = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_GRAVITY:      // m/s2
+                        currentGravity[0] = event.values[0];
+                        currentGravity[1] = event.values[0];
+                        currentGravity[2] = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
+                        currentLinearAcceleration[0] = event.values[0];
+                        currentLinearAcceleration[1] = event.values[0];
+                        currentLinearAcceleration[2] = event.values[0];
+                        break;
+
+                    case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
+                        currentHumidity = event.values[0];
+                        break;
+
+                    default:
+                        break;
+                }
 
             }
 
@@ -177,6 +185,8 @@ class MySensor{
         this.sensorList = sensorList;
     }
 
+    //***** METODI GET PER I VALORI DEI SENSORI *****//
+
     public float getCurrentTemp(){
         return currentTemp;
     }
@@ -188,6 +198,40 @@ class MySensor{
     public float getCurrentLight() {
         return currentLight;
     }
+
+    public float getCurrentHumidity() {
+        return currentHumidity;
+    }
+
+    public float getCurrentProximity() {
+        return currentProximity;
+    }
+
+    public float[] getCurrentAcceleration() {
+        return currentAcceleration;
+    }
+
+    public float[] getCurrentGyroscope() {
+        return currentGyroscope;
+    }
+
+    public float[] getCurrentMagnetic() {
+        return currentMagnetic;
+    }
+
+    public float[] getCurrentRotation() {
+        return currentRotation;
+    }
+
+    public float[] getCurrentGravity() {
+        return currentGravity;
+    }
+
+    public float[] getCurrentLinearAcceleration() {
+        return currentLinearAcceleration;
+    }
+
+    //***********************************************//
 
     public void unregisterSensorListener(){
         sensorManager.unregisterListener(tempSensorListener);

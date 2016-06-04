@@ -53,7 +53,7 @@ public class SensorSelectionActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (view.isSelected()){
+                if (isSelected){
                     view.setBackgroundColor(Color.WHITE);
                     sensorList.remove(list.get(position));
 
