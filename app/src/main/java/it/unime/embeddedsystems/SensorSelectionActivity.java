@@ -51,17 +51,16 @@ public class SensorSelectionActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (isSelected){
+                if (listView.getChildAt(position).isActivated()){
                     view.setBackgroundColor(Color.WHITE);
        // FIXME             sensorList.remove(list.get(position));
 
-                    isSelected = false;
-                    //view.setSelected(false);
+                    listView.getChildAt(position).setActivated(false);
                 }else {
                     view.setBackgroundColor(Color.parseColor("#99cc00"));
                     SensorConfig.sensorList.add(list.get(position));
 
-                    isSelected = true;
+                    listView.getChildAt(position).setActivated(true);
                 }
             }
         });

@@ -14,5 +14,6 @@
     <string name="placeholder_countdown">- (GPS non ancora pronto)</string>
     <string name="invia_ora">Invia ora</string>
     <string name="nome_dataset">Nome dataset:</string>
+    <string name="inserisci_nome_dataset">Inserisci il nome del dataset:</string>
     <string name="placeholder">-</string>
 </resources>

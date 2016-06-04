@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.location.Location;
 import android.location.LocationListener;
@@ -28,8 +29,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +66,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
+
+    EditText nameText;
+
+    private Bundle bundle;
     private List<Sensor> sensorList = new ArrayList<>();
 
     @Override
@@ -94,13 +102,44 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         System.out.println("Sensor List: "+sensorList);
 
-        Timer sendTimer = new Timer();
-        /*sendTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                sendTask(true);
-            }
-        }, 0, countdown);*/
+        setDatasetName();
+
+    }
+
+    private void setDatasetName(){
+
+        nameText = new EditText(getApplicationContext());
+        nameText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        nameText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        nameText.setTextColor(Color.BLACK);
+        nameText.setGravity(Gravity.CENTER);
+
+        new AlertDialog.Builder(this)
+                .setMessage(getString(R.string.inserisci_nome_dataset))
+                .setView(nameText)
+                .setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        System.out.println("lenght: "+nameText.getText().length());
+
+                        if(nameText.getText().length()>1 && !nameText.getText().equals("") /*&& !nameText.getText().equals("nomeDelDatasetEsistente")*/) {
+                            System.out.println("entro");
+                            dialog.dismiss();
+                            Timer sendTimer = new Timer();
+                        /*sendTimer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                sendTask(true);
+                            }
+                        }, 0, countdown);*/
+                        }else{
+                            nameText.getText().clear();
+                        }
+                    }
+                })
+                .create()
+                .show();
 
     }
 
