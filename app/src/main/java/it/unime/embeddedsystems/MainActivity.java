@@ -3,9 +3,11 @@ package it.unime.embeddedsystems;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -32,10 +34,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
@@ -50,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
+    List<Sensor> sensorList;
+
+    private Bundle bundle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,19 +74,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendTask(false);
+                //sendTask(false);
             }
         });
         checkPermissionControl();
         mySensor = new MySensor(this);
 
+        bundle = getIntent().getExtras();
+        if(bundle != null)
+            sensorList = bundle.getParcelable("sensorList");
+
+        System.out.println("Sensor List: "+sensorList);
+
+
+
+
         Timer sendTimer = new Timer();
-        sendTimer.schedule(new TimerTask() {
+        /*sendTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 sendTask(true);
             }
-        }, 0, countdown);
+        }, 0, countdown);*/
 
     }
 
