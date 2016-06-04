@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     EditText nameText;
 
-    private Bundle bundle;
     private List<Sensor> sensorList = new ArrayList<>();
 
     @Override
@@ -97,8 +96,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
         sensorList = SensorConfig.sensorList;
-
-
 
         System.out.println("Sensor List: "+sensorList);
 
