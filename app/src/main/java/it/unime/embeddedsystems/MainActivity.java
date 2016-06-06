@@ -63,12 +63,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
-
     private EditText nameText;
-
     private ListView listView;
     private List<Overview> overviewList = new ArrayList<>();
-
     private List<Sensor> sensorList = new ArrayList<>();
     private boolean isDeviceCurrentSensorsRegistered = false;
     private String lastTempValue = "";
@@ -98,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //sendTask(false);
+                sendTask(false);
             }
         });
         checkPermissionControl();
@@ -108,7 +105,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         for (int k=0; k<sensorList.size(); k++){
             mySensor.registerSensor(sensorList.get(k));
         }
-        System.out.println("Sensor List: "+sensorList);
 
         if(!isDeviceOnline()){
             final AlertDialog mDialog = new AlertDialog.Builder(this)
@@ -124,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             mDialog.show();
             return;
         }
-
 
         if(!isGPSEnable()){
             final AlertDialog mDialog = new AlertDialog.Builder(this)
@@ -177,7 +172,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         for (int k=0; k<sensorList.size(); k++){
             Overview overview = new Overview(getApplicationContext());
-            System.out.println("TYPE: "+sensorList.get(k).getName());
             switch (sensorList.get(k).getType()){
                 case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
                     overview.setSensorName("Temperature");
@@ -297,7 +291,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 .setCancelable(false)
                 .setPositiveButton("OK", null)
                 .create();
-
 
         mDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
@@ -457,7 +450,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             Toast.makeText(getApplicationContext(), "Avvio GPS Fallito", Toast.LENGTH_LONG).show();
             return;
         }
-        // Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
 
@@ -482,7 +474,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return currDate+"T"+currTime;
     }
 
-
     private void getSensorDataToSend(String sensorUUID, String type, String currentValue){
         String[] sensor = {
                 sharedPref.getString(sensorUUID,""),
@@ -495,9 +486,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         new SendData().execute(sensor);
     }
 
-
     void sendTask(final boolean shouldUpdateCountdown){
-       // boolean isDeviceRegistered =//
         if(!isDeviceCurrentSensorsRegistered && !isRegistering){
             new RegisterDevice(this).execute(datasetName);
             isRegistering=true;
@@ -507,11 +496,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         if(!isDeviceCurrentSensorsRegistered || !isGPSReady) {
             return;
         }
-
-      /*  final float currentTemp = mySensor.getCurrentTemp();
-        final float currentPressure = mySensor.getCurrentPressure();
-        final float currentLight = mySensor.getCurrentLight();
-        final String currentDate = getCurrentDate(); */
 
         for(int k=0; k<sensorList.size();k++){
             switch (sensorList.get(k).getType()){
@@ -586,22 +570,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }
 
-
-
-
-
-
-
-
-
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-              /*  currentTempText.setText(""+currentTemp);
-                currentPressureText.setText(""+currentPressure);
-                currentLightText.setText(""+currentLight);
-                currentTimeText.setText(currentDate);*/
                 if(shouldUpdateCountdown) {
                     new CountDownTimer(countdown, 1000) {
                         public void onTick(long millisUntilFinished) {
@@ -615,10 +586,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         });
 
-
     }
 
-    private class RegisterDevice extends AsyncTask<String, Void, JSONObject>{
+    private class RegisterDevice extends AsyncTask<String, Void, Void>{
         Activity mActivity;
         public RegisterDevice(Activity activity)
         {
@@ -686,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
         @Override
-        protected JSONObject doInBackground(String... params) {
+        protected Void doInBackground(String... params) {
             SharedPreferences.Editor editor = sharedPref.edit();
             boolean isRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
 
@@ -811,46 +781,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
             return null;
-       /*     String temperatureDatastoreUUID = createDatastore(params[0],"temperature","Temperature");
-            insertInSensorDatastore(sensorsDatastoreUUID,temperatureDatastoreUUID, "TYPE_TEMPERATURE", "TEMPERATURE", "celsius");
-
-            String pressureDatastoreUUID = createDatastore(params[0],"pressure", "Pressure");
-            insertInSensorDatastore(sensorsDatastoreUUID,pressureDatastoreUUID, "TYPE_PRESSURE", "PRESSURE", "mbar");
-
-            String lightDatastoreUUID = createDatastore(params[0],"light", "Light");
-            insertInSensorDatastore(sensorsDatastoreUUID,lightDatastoreUUID, "TYPE_LIGHT", "LIGHT", "lx");
-
-            JSONObject data = null;
-            try {
-                data = new JSONObject();
-                data.put("datasetName",params[0]);
-                data.put("datasetUUID", datasetUUID);
-                data.put("sensorsDatastoreUUID", sensorsDatastoreUUID);
-                data.put("temperatureDatastoreUUID", temperatureDatastoreUUID);
-                data.put("pressureDatastoreUUID", pressureDatastoreUUID);
-                data.put("lightDatastoreUUID", lightDatastoreUUID);
-            }catch (JSONException e){
-                e.printStackTrace();
-            }*
-            return data;*/
         }
 
         @Override
-        protected void onPostExecute(JSONObject data) {
-         /*   try {
-               SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putBoolean("isDeviceRegistered", true);
-                editor.putString("datasetName", data.getString("datasetName"));
-                editor.putString("datasetUUID", data.getString("datasetUUID"));
-                editor.putString("sensorsDatastoreUUID", data.getString("sensorsDatastoreUUID"));
-                editor.putString("temperatureDatastoreUUID", data.getString("temperatureDatastoreUUID"));
-                editor.putString("pressureDatastoreUUID", data.getString("pressureDatastoreUUID"));
-                editor.putString("lightDatastoreUUID", data.getString("lightDatastoreUUID"));
-                editor.apply();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }*/
-
+        protected void onPostExecute(Void aVoid) {
             isDeviceCurrentSensorsRegistered = true;
         }
 
