@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     }
                 });
             }
-        }, 3000);
+        }, 0, 3000);
 
     }
 
