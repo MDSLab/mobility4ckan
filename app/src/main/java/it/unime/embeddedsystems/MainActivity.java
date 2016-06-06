@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private SharedPreferences sharedPref;
     private int REQUEST_PERMISSION_LOCATION = 1;
     private int countdown = 60*1000;
-    private String datasetName = "android_test_27"; // cambiare
+    private String datasetName = "android_test_28"; // cambiare
     private boolean isRegistering = false;
     private boolean isGPSReady = false;
     private double latitude;
@@ -89,12 +89,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         currentTimeText = (TextView) findViewById(R.id.txv_data);
         countdownText = (TextView) findViewById(R.id.txv_countdown);
         datasetNameText = (TextView) findViewById(R.id.txv_dataset) ;
-        datasetNameText.setText(datasetName);
+
         sendNowBtn = (Button) findViewById(R.id.btn_invia);
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //sendTask(false);
+                sendTask(false);
             }
         });
         checkPermissionControl();
@@ -157,11 +157,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
                     @Override
                     public void onClick(View view) {
-                        String name = nameText.getText().toString();
-                        Matcher matcher = Pattern.compile("([a-z]?[0-9/-/_]^[A-Z])").matcher(name);
+                        datasetName = nameText.getText().toString().trim().toLowerCase();
+                        Matcher matcher = Pattern.compile("([a-z]?[0-9/-/_])").matcher(datasetName);
 
                         if(matcher.find()) {
                             mDialog.dismiss();
+                            datasetNameText.setText(datasetName);
                             Timer sendTimer = new Timer();
                             sendTimer.schedule(new TimerTask() {
                                 @Override
@@ -662,6 +663,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             } catch (JSONException e) {
                 e.printStackTrace();
             }*/
+
+            isDeviceCurrentSensorsRegistered = true;
         }
 
     }

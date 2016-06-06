@@ -28,6 +28,13 @@ class MySensor{
 
         sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
 
+        currentAcceleration = new float[3];
+        currentGyroscope = new float[3];
+        currentMagnetic = new float[3];
+        currentRotation = new float[3];
+        currentGravity  = new float[3];
+        currentLinearAcceleration = new float[3];
+
         /*tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
         pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
@@ -59,20 +66,20 @@ class MySensor{
 
                     case Sensor.TYPE_ACCELEROMETER:    // m/s2
                         currentAcceleration[0] = event.values[0];
-                        currentAcceleration[1] = event.values[0];
-                        currentAcceleration[2] = event.values[0];
+                        currentAcceleration[1] = event.values[1];
+                        currentAcceleration[2] = event.values[2];
                         break;
 
                     case Sensor.TYPE_GYROSCOPE:     // rad/s
                         currentGyroscope[0] = event.values[0];
-                        currentGyroscope[1] = event.values[0];
-                        currentGyroscope[2] = event.values[0];
+                        currentGyroscope[1] = event.values[1];
+                        currentGyroscope[2] = event.values[2];
                         break;
 
                     case Sensor.TYPE_MAGNETIC_FIELD:    // μT
                         currentMagnetic[0] = event.values[0];
-                        currentMagnetic[1] = event.values[0];
-                        currentMagnetic[2] = event.values[0];
+                        currentMagnetic[1] = event.values[1];
+                        currentMagnetic[2] = event.values[2];
                         break;
 
                     case Sensor.TYPE_PROXIMITY:     // cm
@@ -81,20 +88,20 @@ class MySensor{
 
                     case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
                         currentRotation[0] = event.values[0];
-                        currentRotation[1] = event.values[0];
-                        currentRotation[2] = event.values[0];
+                        currentRotation[1] = event.values[1];
+                        currentRotation[2] = event.values[2];
                         break;
 
                     case Sensor.TYPE_GRAVITY:      // m/s2
                         currentGravity[0] = event.values[0];
-                        currentGravity[1] = event.values[0];
-                        currentGravity[2] = event.values[0];
+                        currentGravity[1] = event.values[1];
+                        currentGravity[2] = event.values[2];
                         break;
 
                     case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
                         currentLinearAcceleration[0] = event.values[0];
-                        currentLinearAcceleration[1] = event.values[0];
-                        currentLinearAcceleration[2] = event.values[0];
+                        currentLinearAcceleration[1] = event.values[1];
+                        currentLinearAcceleration[2] = event.values[2];
                         break;
 
                     case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
