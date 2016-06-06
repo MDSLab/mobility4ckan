@@ -37,8 +37,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/body_view_layout"
         android:orientation="horizontal"
-        android:layout_below="@+id/note_layout"
-        android:padding="5dp">
+        android:layout_below="@+id/note_layout">
 
     </LinearLayout>
 

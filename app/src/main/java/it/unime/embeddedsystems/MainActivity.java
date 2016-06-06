@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendTask(false);
+                //sendTask(false);
             }
         });
         checkPermissionControl();
@@ -196,7 +196,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     @Override
                     public void onClick(View view) {
                         datasetName = nameText.getText().toString().trim().toLowerCase();
-                        Matcher matcher = Pattern.compile("([a-z]?[0-9/-/_])").matcher(datasetName);
+                        String regexp = "([a-z-_]|[0-9-_])";
+                        Matcher matcher = Pattern.compile(regexp).matcher(datasetName);
 
                         if(matcher.find()) {
                             mDialog.dismiss();
@@ -483,8 +484,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     }
-
-
 
     private class RegisterDevice extends AsyncTask<String, Void, JSONObject>{
         Activity mActivity;

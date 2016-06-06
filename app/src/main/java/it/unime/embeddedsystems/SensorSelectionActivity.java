@@ -15,6 +15,7 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -51,26 +52,27 @@ public class SensorSelectionActivity extends AppCompatActivity {
             dinamicViewList.add(dinamicView);
         }
 
+        checkSensorsSelected();
+
         listView.setAdapter(new SensorAdapter(getApplicationContext(), dinamicViewList));
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (dinamicViewList.get(position).isChoose()){
-                    view.setBackgroundColor(Color.WHITE);
+                    dinamicViewList.get(position).setBackgroundColor(Color.WHITE);
                     SensorConfig.sensorList.remove(list.get(position));
 
                     dinamicViewList.get(position).setChoose(false);
                 }else {
-                    view.setBackgroundColor(Color.parseColor("#99cc00"));
+                    dinamicViewList.get(position).setBackgroundColor(Color.parseColor("#99cc00"));
                     SensorConfig.sensorList.add(list.get(position));
 
                     dinamicViewList.get(position).setChoose(true);
                 }
             }
         });
-        Set<String> set = sharedPref.getStringSet("selectedSensors", null);
-        // FIXME continua selezione salvati
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,6 +88,22 @@ public class SensorSelectionActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void checkSensorsSelected(){
+        Set<String> set = sharedPref.getStringSet("selectedSensors", null);
+        if(set != null) {
+            for (Iterator<String> it = set.iterator(); it.hasNext(); ) {
+                String next = it.next();
+                for (int j = 0; j < list.size(); j++) {
+                    if (next.equals(list.get(j).getName())) {
+                        dinamicViewList.get(j).setBackgroundColor(Color.parseColor("#99cc00"));
+                        dinamicViewList.get(j).setChoose(true);
+                        SensorConfig.sensorList.add(list.get(j));
+                    }
+                }
+            }
+        }
     }
 
 }
