@@ -1,5 +1,5 @@
 /* TODO:
-*  1) Sensori selezionabili
+*  1) Sensori selezionabili  --->>  OK
 *  2) Cambiare layout
 *  3) Scegliere nome dataset e fare controlli su CKAN
 *  4) Controlli su WIFI e GPS

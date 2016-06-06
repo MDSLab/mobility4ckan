@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -26,11 +25,7 @@ public class SensorSelectionActivity extends AppCompatActivity {
     SensorManager sensorManager;
 
     List<Sensor> list;
-    List<String> nameSensorList = new ArrayList<>();
-
-    ArrayAdapter adapter;
-
-    boolean isSelected = false;
+    List<DinamicView> dinamicViewList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,24 +38,28 @@ public class SensorSelectionActivity extends AppCompatActivity {
         button = (Button)findViewById(R.id.button);
 
         for(Sensor s : list) {
-            nameSensorList.add(s.getName());
+            DinamicView dinamicView = new DinamicView(getApplicationContext());
+            dinamicView.getNoteLabel().setText(s.getName());
+            dinamicView.setNoteVisibility(View.INVISIBLE);
+
+            dinamicViewList.add(dinamicView);
         }
 
-        adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, nameSensorList);
-        listView.setAdapter(adapter);
+        listView.setAdapter(new SensorAdapter(getApplicationContext(), dinamicViewList));
+        listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (listView.getChildAt(position).isActivated()){
+                if (dinamicViewList.get(position).isChoose()){
                     view.setBackgroundColor(Color.WHITE);
                     SensorConfig.sensorList.remove(list.get(position));
 
-                    listView.getChildAt(position).setActivated(false);
+                    dinamicViewList.get(position).setChoose(false);
                 }else {
                     view.setBackgroundColor(Color.parseColor("#99cc00"));
                     SensorConfig.sensorList.add(list.get(position));
 
-                    listView.getChildAt(position).setActivated(true);
+                    dinamicViewList.get(position).setChoose(true);
                 }
             }
         });
@@ -68,7 +67,6 @@ public class SensorSelectionActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println("size sensor: "+SensorConfig.sensorList.size());
                 Intent intent = new Intent(getBaseContext(), MainActivity.class);
                 startActivity(intent);
             }
