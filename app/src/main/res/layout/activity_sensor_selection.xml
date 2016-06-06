@@ -35,7 +35,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/selection_list_layout"
-        android:layout_below="@+id/selection_title_layout">
+        android:layout_below="@+id/selection_title_layout"
+        android:padding="5dp">
 
         <ListView
             android:layout_width="match_parent"

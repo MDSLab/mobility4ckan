@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,7 +52,7 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
-    private TextView locationText, currentTempText, currentPressureText, currentLightText, currentTimeText, countdownText, datasetNameText;
+    private TextView locationText, countdownText, datasetNameText;
     private Button sendNowBtn;
     private SharedPreferences sharedPref;
     private int REQUEST_PERMISSION_LOCATION = 1;
@@ -62,7 +63,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
+
     private EditText nameText;
+
+    private ListView listView;
+    private List<Overview> overviewList = new ArrayList<>();
+
     private List<Sensor> sensorList = new ArrayList<>();
     private boolean isDeviceCurrentSensorsRegistered = false;
     private String lastTempValue = "";
@@ -84,12 +90,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         locationText = (TextView) findViewById(R.id.txv_gps);
-        currentTempText = (TextView) findViewById(R.id.txv_temp);
-        currentPressureText = (TextView) findViewById(R.id.txv_pressure);
-        currentLightText = (TextView) findViewById(R.id.txv_light);
-        currentTimeText = (TextView) findViewById(R.id.txv_data);
         countdownText = (TextView) findViewById(R.id.txv_countdown);
         datasetNameText = (TextView) findViewById(R.id.txv_dataset) ;
+        listView = (ListView)findViewById(R.id.sensor_listview);
 
         sendNowBtn = (Button) findViewById(R.id.btn_invia);
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
@@ -147,6 +150,118 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             startTimer();
         }
 
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        createListView();
+                    }
+                });
+            }
+        }, 3000);
+
+    }
+
+    private void createListView(){
+
+        overviewList.clear();
+
+        Overview overviewTitle = new Overview(getApplicationContext());
+        overviewTitle.setSensorName("Nome Sensore");
+        overviewTitle.setCurrentValue("Valore Corrente");
+        overviewTitle.setValueSend("Valore Inviato");
+        overviewList.add(overviewTitle);
+
+        for (int k=0; k<sensorList.size(); k++){
+            Overview overview = new Overview(getApplicationContext());
+            System.out.println("TYPE: "+sensorList.get(k).getName());
+            switch (sensorList.get(k).getType()){
+                case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
+                    overview.setSensorName("Temperature");
+                    overview.setCurrentValue(""+mySensor.getCurrentTemp());
+                    overview.setValueSend(lastTempValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_PRESSURE:
+                    overview.setSensorName("Pressure");
+                    overview.setCurrentValue(""+mySensor.getCurrentPressure());
+                    overview.setValueSend(lastPressureValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_LIGHT:    // lx
+                    overview.setSensorName("Light");
+                    overview.setCurrentValue(""+mySensor.getCurrentLight());
+                    overview.setValueSend(lastLightValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_ACCELEROMETER:    // m/s2
+                    overview.setSensorName("Accelerometer");
+                    overview.setCurrentValue(""+mySensor.getCurrentAcceleration());
+                    overview.setValueSend(lastAccelerationValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_GYROSCOPE:     // rad/s
+                    overview.setSensorName("Gyroscope");
+                    overview.setCurrentValue(""+mySensor.getCurrentGyroscope());
+                    overview.setValueSend(lastGyroscopeValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_MAGNETIC_FIELD:    // μT
+                    overview.setSensorName("Magnetic Field");
+                    overview.setCurrentValue(""+mySensor.getCurrentMagnetic());
+                    overview.setValueSend(lastMagneticValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_PROXIMITY:     // cm
+                    overview.setSensorName("Proximity");
+                    overview.setCurrentValue(""+mySensor.getCurrentProximity());
+                    overview.setValueSend(lastProximityValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
+                    overview.setSensorName("Rotation Vector");
+                    overview.setCurrentValue(""+mySensor.getCurrentRotation());
+                    overview.setValueSend(lastRotationValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_GRAVITY:      // m/s2
+                    overview.setSensorName("Gravity");
+                    overview.setCurrentValue(""+mySensor.getCurrentGravity());
+                    overview.setValueSend(lastGravityValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
+                    overview.setSensorName("Linear Acceleration");
+                    overview.setCurrentValue(""+mySensor.getCurrentLinearAcceleration());
+                    overview.setValueSend(lastLinearAccelerationValue);
+                    overviewList.add(overview);
+                    break;
+
+                case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
+                    overview.setSensorName("Relative Humidity");
+                    overview.setCurrentValue(""+mySensor.getCurrentHumidity());
+                    overview.setValueSend(lastRelativeHumidity);
+                    overviewList.add(overview);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        listView.setAdapter(new OverviewAdapter(getApplicationContext(), overviewList));
 
     }
 
@@ -397,9 +512,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         final float currentPressure = mySensor.getCurrentPressure();
         final float currentLight = mySensor.getCurrentLight();
         final String currentDate = getCurrentDate(); */
-
-
-
 
         for(int k=0; k<sensorList.size();k++){
             switch (sensorList.get(k).getType()){
