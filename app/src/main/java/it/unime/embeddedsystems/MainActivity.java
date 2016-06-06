@@ -54,6 +54,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
@@ -123,24 +125,43 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private void setDatasetName(){
 
+        DinamicView dinamicView = new DinamicView(getApplicationContext());
+        dinamicView.getNoteLabel().setText(getString(R.string.note_dialog));
+        dinamicView.getNoteLabel().setTextSize(12);
+
         nameText = new EditText(getApplicationContext());
-        nameText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        nameText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        nameText.setGravity(Gravity.CENTER);
         nameText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         nameText.setTextColor(Color.BLACK);
-        nameText.setGravity(Gravity.CENTER);
+        nameText.setSingleLine(true);
+        nameText.setTextSize(18);
 
-        new AlertDialog.Builder(this)
+        dinamicView.getBodyLayout().addView(nameText);
+
+        final AlertDialog mDialog = new AlertDialog.Builder(this)
                 .setMessage(getString(R.string.inserisci_nome_dataset))
-                .setView(nameText)
+                .setView(dinamicView)
                 .setCancelable(false)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        System.out.println("lenght: "+nameText.getText().length());
+                .setPositiveButton("OK", null)
+                .create();
+                //.show();
 
-                        if(nameText.getText().length()>1 && !nameText.getText().equals("") /*&& !nameText.getText().equals("nomeDelDatasetEsistente")*/) {
-                            System.out.println("entro");
-                            dialog.dismiss();
+
+        mDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+
+                Button b = mDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                b.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        String name = nameText.getText().toString();
+                        Matcher matcher = Pattern.compile("([a-z]?[0-9/-/_]^[A-Z])").matcher(name);
+
+                        if(matcher.find()) {
+                            mDialog.dismiss();
                             Timer sendTimer = new Timer();
                             sendTimer.schedule(new TimerTask() {
                                 @Override
@@ -151,11 +172,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         }else{
                             System.out.println("non entro");
                             nameText.getText().clear();
+                            nameText.setError(getString(R.string.note_dialog));
                         }
                     }
-                })
-                .create()
-                .show();
+                });
+            }
+        });
+        mDialog.show();
 
     }
 

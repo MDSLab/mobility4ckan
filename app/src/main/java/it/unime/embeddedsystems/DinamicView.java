@@ -16,6 +16,7 @@ public class DinamicView extends RelativeLayout {
     RelativeLayout layout;
     TextView noteLabel;
     ImageView infoImage;
+    LinearLayout bodyLayout;
 
     boolean choose = false;
 
@@ -40,6 +41,7 @@ public class DinamicView extends RelativeLayout {
         layout = (RelativeLayout)findViewById(R.id.layout_view);
         noteLabel = (TextView)findViewById(R.id.note_label);
         infoImage = (ImageView)findViewById(R.id.info_image);
+        bodyLayout = (LinearLayout)findViewById(R.id.body_view_layout);
 
     }
 
@@ -71,4 +73,7 @@ public class DinamicView extends RelativeLayout {
         infoImage.setVisibility(visibility);
     }
 
+    public LinearLayout getBodyLayout() {
+        return bodyLayout;
+    }
 }
