@@ -12,6 +12,7 @@ package it.unime.embeddedsystems;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.DialogInterface;
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private SharedPreferences sharedPref;
     private int REQUEST_PERMISSION_LOCATION = 1;
     private int countdown = 60*1000;
-    private String datasetName = "android_test_28"; // cambiare
+    private String datasetName = "";
     private boolean isRegistering = false;
     private boolean isGPSReady = false;
     private double latitude;
@@ -76,12 +77,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private List<Sensor> sensorList = new ArrayList<>();
     boolean isDeviceCurrentSensorsRegistered = false;
 
+    private Activity mAct;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
+        mAct = this;
         locationText = (TextView) findViewById(R.id.txv_gps);
         currentTempText = (TextView) findViewById(R.id.txv_temp);
         currentPressureText = (TextView) findViewById(R.id.txv_pressure);
@@ -106,21 +109,57 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         System.out.println("Sensor List: "+sensorList);
 
-        if(isDeviceOnline()){
-            Toast.makeText(this, "ONLINE", Toast.LENGTH_LONG).show();
+        if(!isDeviceOnline()){
+            final AlertDialog mDialog = new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.sei_offline))
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+            mDialog.show();
+            return;
+        }
+
+
+        if(!isGPSEnable()){
+            final AlertDialog mDialog = new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.gps_disattivato))
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+            mDialog.show();
+            return;
+        }
+
+        if(sharedPref.getString("datasetName","").isEmpty()) {
+            setDatasetName();
         }
         else{
-            Toast.makeText(this, "OFFLINE", Toast.LENGTH_LONG).show();
+            datasetNameText.setText(sharedPref.getString("datasetName",""));
+            datasetName = sharedPref.getString("datasetName","");
+            startTimer();
         }
 
-        if(isGPSEnable()){
-            Toast.makeText(this, "GPS SPENTO", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(this, "GPS ACCESO", Toast.LENGTH_SHORT).show();
-        }
 
-        setDatasetName();
+    }
 
+    private void startTimer(){
+        Timer sendTimer = new Timer();
+        sendTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                sendTask(true);
+            }
+        }, 0, countdown);
     }
 
     private void setDatasetName(){
@@ -145,7 +184,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 .setCancelable(false)
                 .setPositiveButton("OK", null)
                 .create();
-                //.show();
 
 
         mDialog.setOnShowListener(new DialogInterface.OnShowListener() {
@@ -163,13 +201,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         if(matcher.find()) {
                             mDialog.dismiss();
                             datasetNameText.setText(datasetName);
-                            Timer sendTimer = new Timer();
-                            sendTimer.schedule(new TimerTask() {
-                                @Override
-                                public void run() {
-                                    sendTask(true);
-                                }
-                            }, 0, countdown);
+                            startTimer();
                         }else{
                             System.out.println("non entro");
                             nameText.getText().clear();
@@ -311,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             Toast.makeText(getApplicationContext(), "Avvio GPS Fallito", Toast.LENGTH_LONG).show();
             return;
         }
-        Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
+        // Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
 
@@ -353,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     void sendTask(final boolean shouldUpdateCountdown){
        // boolean isDeviceRegistered =//
         if(!isDeviceCurrentSensorsRegistered && !isRegistering){
-            new RegisterDevice().execute(datasetName);
+            new RegisterDevice(this).execute(datasetName);
             isRegistering=true;
             return;
         }
@@ -452,13 +484,34 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
+
+
     private class RegisterDevice extends AsyncTask<String, Void, JSONObject>{
+        Activity mActivity;
+        public RegisterDevice(Activity activity)
+        {
+            super();
+            this.mActivity=activity;
+        }
 
         String createDataset(String datasetName){
             String datasetUUID = "";
             try {
                 String command = "{\"name\":\""+datasetName+"\", \"title\":\""+datasetName+"\", \"owner_org\":\"test\", \"extras\":{\"Label\":\"android-phone\",\"Manufacturer\":\"Android\", \"Model\":\"smartphone\",\"Altitude\":0,\"Latitude\":0,\"Longitude\":0}}";
                 JSONObject response = POST("http://smartme-data.unime.it/api/rest/dataset", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Dataset
+
+                if(response==null){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "Il nome del database è gia in uso. Selezionarne uno diverso.", Toast.LENGTH_LONG).show();
+
+                        }
+                    });
+                    this.mActivity.finish();
+                    return null;
+                }
+
                 datasetUUID = response.getString("id");
             }catch (JSONException e){
                 e.printStackTrace();
@@ -507,6 +560,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             if(!isRegistered) {
                 String datasetUUID = createDataset(params[0]);
+                if(datasetUUID==null)
+                    return null;
                 String sensorsDatastoreUUID = createSensorDatastore(params[0], "sensors");
 
                 editor.putBoolean("isDeviceRegistered", true);
