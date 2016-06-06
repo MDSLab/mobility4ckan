@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private String getCurrentDate(){
         Date date = new Date();
         SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat formatTime = new SimpleDateFormat("hh:mm:ss");
+        SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm:ss");
         String currDate = formatDate.format(date);
         String currTime = formatTime.format(date);
 
