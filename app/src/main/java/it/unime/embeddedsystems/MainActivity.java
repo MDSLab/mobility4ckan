@@ -62,9 +62,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
-    EditText nameText;
+    private EditText nameText;
     private List<Sensor> sensorList = new ArrayList<>();
-    boolean isDeviceCurrentSensorsRegistered = false;
+    private boolean isDeviceCurrentSensorsRegistered = false;
+    private String lastTempValue = "";
+    private String lastPressureValue = "";
+    private String lastLightValue = "";
+    private String lastAccelerationValue = "";
+    private String lastGyroscopeValue = "";
+    private String lastMagneticValue = "";
+    private String lastProximityValue = "";
+    private String lastRotationValue = "";
+    private String lastGravityValue = "";
+    private String lastLinearAccelerationValue = "";
+    private String lastRelativeHumidity = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -388,51 +399,74 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         final String currentDate = getCurrentDate(); */
 
 
+
+
         for(int k=0; k<sensorList.size();k++){
             switch (sensorList.get(k).getType()){
                 case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
-                    getSensorDataToSend("temperatureDatastoreUUID", "Temperature", ""+mySensor.getCurrentTemp());
+                    String currentTempValue = ""+mySensor.getCurrentTemp();
+                    getSensorDataToSend("temperatureDatastoreUUID", "Temperature", currentTempValue);
+                    lastTempValue = currentTempValue;
                     break;
 
                 case Sensor.TYPE_PRESSURE:
-                    getSensorDataToSend("pressureDatastoreUUID", "Pressure", ""+mySensor.getCurrentPressure());
+                    String currentPressureValue = ""+mySensor.getCurrentPressure();
+                    getSensorDataToSend("pressureDatastoreUUID", "Pressure",currentPressureValue);
+                    lastPressureValue = currentPressureValue;
                     break;
 
                 case Sensor.TYPE_LIGHT:    // lx
-                    getSensorDataToSend("lightDatastoreUUID", "Light", ""+mySensor.getCurrentLight());
+                    String currentLightValue = ""+mySensor.getCurrentLight();
+                    getSensorDataToSend("lightDatastoreUUID", "Light", currentLightValue);
+                    lastLightValue = currentLightValue;
                     break;
 
                 case Sensor.TYPE_ACCELEROMETER:    // m/s2
-                    getSensorDataToSend("accelerometerDatastoreUUID", "Accelerometer", mySensor.getCurrentAcceleration());
+                    String currentAccelerationValue = mySensor.getCurrentAcceleration();
+                    getSensorDataToSend("accelerometerDatastoreUUID", "Accelerometer", currentAccelerationValue);
+                    lastAccelerationValue = currentAccelerationValue;
                     break;
 
                 case Sensor.TYPE_GYROSCOPE:     // rad/s
-                    getSensorDataToSend("gyroscopeDatastoreUUID", "Gyroscope", mySensor.getCurrentGyroscope());
+                    String currentGyroscopeValue = mySensor.getCurrentGyroscope();
+                    getSensorDataToSend("gyroscopeDatastoreUUID", "Gyroscope", currentGyroscopeValue);
+                    lastGyroscopeValue = currentGyroscopeValue;
                     break;
 
                 case Sensor.TYPE_MAGNETIC_FIELD:    // μT
-                    getSensorDataToSend("magneticFieldDatastoreUUID", "MagneticField", mySensor.getCurrentMagnetic());
-
+                    String currentMagneticValue = mySensor.getCurrentMagnetic();
+                    getSensorDataToSend("magneticFieldDatastoreUUID", "MagneticField", currentMagneticValue);
+                    lastMagneticValue = currentMagneticValue;
                     break;
 
                 case Sensor.TYPE_PROXIMITY:     // cm
-                    getSensorDataToSend("proximityDatastoreUUID", "Proximity", ""+mySensor.getCurrentProximity());
+                    String currentProximityValue = ""+mySensor.getCurrentProximity();
+                    getSensorDataToSend("proximityDatastoreUUID", "Proximity", currentProximityValue);
+                    lastProximityValue = currentProximityValue;
                     break;
 
                 case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
-                    getSensorDataToSend("rotationVector", "RotationVector", mySensor.getCurrentRotation());
+                    String currentRotationValue = mySensor.getCurrentRotation();
+                    getSensorDataToSend("rotationVector", "RotationVector", currentRotationValue);
+                    lastRotationValue = currentRotationValue;
                     break;
 
                 case Sensor.TYPE_GRAVITY:      // m/s2
-                    getSensorDataToSend("gravity", "Gravity", mySensor.getCurrentGravity());
+                    String currentGravityValue = mySensor.getCurrentGravity();
+                    getSensorDataToSend("gravity", "Gravity", currentGravityValue);
+                    lastGravityValue = currentGravityValue;
                     break;
 
                 case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
-                    getSensorDataToSend("linearAcceleration", "LinearAcceleration", mySensor.getCurrentLinearAcceleration());
+                    String currentLinearAccelerationValue = mySensor.getCurrentLinearAcceleration();
+                    getSensorDataToSend("linearAcceleration", "LinearAcceleration", currentLinearAccelerationValue);
+                    lastLinearAccelerationValue = currentLinearAccelerationValue;
                     break;
 
                 case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
-                    getSensorDataToSend("relativeHumidity", "RelativeHumidity", ""+mySensor.getCurrentHumidity());
+                    String currentRelativeHumidity = ""+mySensor.getCurrentHumidity();
+                    getSensorDataToSend("relativeHumidity", "RelativeHumidity", currentRelativeHumidity);
+                    lastRelativeHumidity = currentRelativeHumidity;
                     break;
 
                 default:
