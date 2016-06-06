@@ -207,28 +207,28 @@ class MySensor{
         return currentProximity;
     }
 
-    public float[] getCurrentAcceleration() {
-        return currentAcceleration;
+    public String getCurrentAcceleration() {
+        return ""+currentAcceleration[0]+" "+currentAcceleration[1]+" "+currentAcceleration[2];
     }
 
-    public float[] getCurrentGyroscope() {
-        return currentGyroscope;
+    public String getCurrentGyroscope() {
+        return ""+currentGyroscope[0]+" "+currentGyroscope[1]+" "+currentGyroscope[2];
     }
 
-    public float[] getCurrentMagnetic() {
-        return currentMagnetic;
+    public String getCurrentMagnetic() {
+        return ""+currentMagnetic[0]+" "+currentMagnetic[1]+" "+currentMagnetic[2];
     }
 
-    public float[] getCurrentRotation() {
-        return currentRotation;
+    public String getCurrentRotation() {
+        return ""+currentRotation[0]+" "+currentRotation[1]+" "+currentRotation[2];
     }
 
-    public float[] getCurrentGravity() {
-        return currentGravity;
+    public String getCurrentGravity() {
+        return ""+currentGravity[0]+" "+currentGravity[1]+" "+currentGravity[2];
     }
 
-    public float[] getCurrentLinearAcceleration() {
-        return currentLinearAcceleration;
+    public String getCurrentLinearAcceleration() {
+        return ""+currentLinearAcceleration[0]+" "+currentLinearAcceleration[1]+" "+currentLinearAcceleration[2];
     }
 
     //***********************************************//

@@ -2,7 +2,7 @@
 *  1) Sensori selezionabili  --->>  OK
 *  2) Cambiare layout
 *  3) Scegliere nome dataset e fare controlli su CKAN
-*  4) Controlli su WIFI e GPS
+*  4) Controlli su WIFI e GPS --->> OK
 *  5) Invio per spostamento (ogni tot metri)
 *  6) Vedere se siamo a piedi o in macchina
 */
@@ -72,6 +72,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     EditText nameText;
 
     private List<Sensor> sensorList = new ArrayList<>();
+    boolean isDeviceCurrentSensorsRegistered = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,11 +96,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         });
         checkPermissionControl();
-        mySensor = new MySensor(this);
-
 
         sensorList = SensorConfig.sensorList;
-
+        mySensor = new MySensor(this);
+        for (int k=0; k<sensorList.size(); k++){
+            mySensor.registerSensor(sensorList.get(k));
+        }
         System.out.println("Sensor List: "+sensorList);
 
         if(isDeviceOnline()){
@@ -139,12 +142,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             System.out.println("entro");
                             dialog.dismiss();
                             Timer sendTimer = new Timer();
-                        /*sendTimer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                sendTask(true);
-                            }
-                        }, 0, countdown);*/
+                            sendTimer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    sendTask(true);
+                                }
+                            }, 0, countdown);
                         }else{
                             System.out.println("non entro");
                             nameText.getText().clear();
@@ -309,30 +312,106 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return currDate+"T"+currTime;
     }
 
+
+    private void getSensorDataToSend(String sensorUUID, String type, String currentValue){
+        String[] sensor = {
+                sharedPref.getString(sensorUUID,""),
+                type,
+                currentValue,
+                ""+latitude,
+                ""+longitude,
+                getCurrentDate()
+        };
+        new SendData().execute(sensor);
+    }
+
+
     void sendTask(final boolean shouldUpdateCountdown){
-        boolean isDeviceRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
-        if(!isDeviceRegistered && !isRegistering){
+       // boolean isDeviceRegistered =//
+        if(!isDeviceCurrentSensorsRegistered && !isRegistering){
             new RegisterDevice().execute(datasetName);
             isRegistering=true;
             return;
         }
 
-        if(!isDeviceRegistered || !isGPSReady) {
+        if(!isDeviceCurrentSensorsRegistered || !isGPSReady) {
             return;
         }
 
-        final float currentTemp = mySensor.getCurrentTemp();
+      /*  final float currentTemp = mySensor.getCurrentTemp();
         final float currentPressure = mySensor.getCurrentPressure();
         final float currentLight = mySensor.getCurrentLight();
-        final String currentDate = getCurrentDate();
+        final String currentDate = getCurrentDate(); */
+
+
+        for(int k=0; k<sensorList.size();k++){
+            switch (sensorList.get(k).getType()){
+                case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
+                    getSensorDataToSend("temperatureDatastoreUUID", "Temperature", ""+mySensor.getCurrentTemp());
+                    break;
+
+                case Sensor.TYPE_PRESSURE:
+                    getSensorDataToSend("pressureDatastoreUUID", "Pressure", ""+mySensor.getCurrentPressure());
+                    break;
+
+                case Sensor.TYPE_LIGHT:    // lx
+                    getSensorDataToSend("lightDatastoreUUID", "Light", ""+mySensor.getCurrentLight());
+                    break;
+
+                case Sensor.TYPE_ACCELEROMETER:    // m/s2
+                    getSensorDataToSend("accelerometerDatastoreUUID", "Accelerometer", mySensor.getCurrentAcceleration());
+                    break;
+
+                case Sensor.TYPE_GYROSCOPE:     // rad/s
+                    getSensorDataToSend("gyroscopeDatastoreUUID", "Gyroscope", mySensor.getCurrentGyroscope());
+                    break;
+
+                case Sensor.TYPE_MAGNETIC_FIELD:    // μT
+                    getSensorDataToSend("magneticFieldDatastoreUUID", "MagneticField", mySensor.getCurrentMagnetic());
+
+                    break;
+
+                case Sensor.TYPE_PROXIMITY:     // cm
+                    getSensorDataToSend("proximityDatastoreUUID", "Proximity", ""+mySensor.getCurrentProximity());
+                    break;
+
+                case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
+                    getSensorDataToSend("rotationVector", "RotationVector", mySensor.getCurrentRotation());
+                    break;
+
+                case Sensor.TYPE_GRAVITY:      // m/s2
+                    getSensorDataToSend("gravity", "Gravity", mySensor.getCurrentGravity());
+                    break;
+
+                case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
+                    getSensorDataToSend("linearAcceleration", "LinearAcceleration", mySensor.getCurrentLinearAcceleration());
+                    break;
+
+                case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
+                    getSensorDataToSend("relativeHumidity", "RelativeHumidity", ""+mySensor.getCurrentHumidity());
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+
+
+
+
+
+
+
+
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                currentTempText.setText(""+currentTemp);
+              /*  currentTempText.setText(""+currentTemp);
                 currentPressureText.setText(""+currentPressure);
                 currentLightText.setText(""+currentLight);
-                currentTimeText.setText(currentDate);
+                currentTimeText.setText(currentDate);*/
                 if(shouldUpdateCountdown) {
                     new CountDownTimer(countdown, 1000) {
                         public void onTick(long millisUntilFinished) {
@@ -346,35 +425,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         });
 
-        String[] temperature = {
-                sharedPref.getString("temperatureDatastoreUUID",""),
-                "Temperature",
-                ""+currentTemp,
-                ""+latitude,
-                ""+longitude,
-                currentDate
-        };
-        new SendData().execute(temperature);
-
-        String[] pressure = {
-                sharedPref.getString("pressureDatastoreUUID",""),
-                "Pressure",
-                ""+currentPressure,
-                ""+latitude,
-                ""+longitude,
-                currentDate
-        };
-        new SendData().execute(pressure);
-
-        String[] light = {
-                sharedPref.getString("lightDatastoreUUID",""),
-                "Light",
-                ""+currentLight,
-                ""+latitude,
-                ""+longitude,
-                currentDate
-        };
-        new SendData().execute(light);
 
     }
 
@@ -428,10 +478,129 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         @Override
         protected JSONObject doInBackground(String... params) {
-            String datasetUUID = createDataset(params[0]);
-            String sensorsDatastoreUUID = createSensorDatastore(params[0],"sensors");
+            SharedPreferences.Editor editor = sharedPref.edit();
+            boolean isRegistered = sharedPref.getBoolean("isDeviceRegistered", false);
 
-            String temperatureDatastoreUUID = createDatastore(params[0],"temperature","Temperature");
+            if(!isRegistered) {
+                String datasetUUID = createDataset(params[0]);
+                String sensorsDatastoreUUID = createSensorDatastore(params[0], "sensors");
+
+                editor.putBoolean("isDeviceRegistered", true);
+                editor.putString("datasetName", params[0]);
+                editor.putString("datasetUUID", datasetUUID);
+                editor.putString("sensorsDatastoreUUID", sensorsDatastoreUUID);
+                editor.apply();
+            }
+
+            for (int k=0;k<sensorList.size();k++){
+                switch (sensorList.get(k).getType()){
+                    case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
+                        if(sharedPref.getString("temperatureDatastoreUUID","").isEmpty()) {
+                            String temperatureDatastoreUUID = createDatastore(params[0], "temperature", "Temperature");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""), temperatureDatastoreUUID, "TYPE_TEMPERATURE", "TEMPERATURE", "celsius");
+                            editor.putString("temperatureDatastoreUUID", temperatureDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_PRESSURE:
+                        if(sharedPref.getString("pressureDatastoreUUID","").isEmpty()) {
+                            String pressureDatastoreUUID = createDatastore(params[0],"pressure", "Pressure");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),pressureDatastoreUUID, "TYPE_PRESSURE", "PRESSURE", "mbar");
+                            editor.putString("pressureDatastoreUUID", pressureDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_LIGHT:    // lx
+                        if(sharedPref.getString("lightDatastoreUUID","").isEmpty()) {
+                            String lightDatastoreUUID = createDatastore(params[0],"light", "Light");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),lightDatastoreUUID, "TYPE_LIGHT", "LIGHT", "lx");
+                            editor.putString("lightDatastoreUUID", lightDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_ACCELEROMETER:    // m/s2
+                        if(sharedPref.getString("accelerometerDatastoreUUID","").isEmpty()) {
+                            String accelerometerDatastoreUUID = createDatastore(params[0],"accelerometer", "Accelerometer");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),accelerometerDatastoreUUID, "TYPE_ACCELEROMETER", "ACCELEROMETER", "m/s2");
+                            editor.putString("accelerometerDatastoreUUID", accelerometerDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_GYROSCOPE:     // rad/s
+                        if(sharedPref.getString("gyroscopeDatastoreUUID","").isEmpty()) {
+                            String gyroscopeDatastoreUUID = createDatastore(params[0],"gyroscope", "Gyroscope");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),gyroscopeDatastoreUUID, "TYPE_GYROSCOPE", "GYROSCOPE", "rad/s");
+                            editor.putString("gyroscopeDatastoreUUID", gyroscopeDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_MAGNETIC_FIELD:    // μT
+                        if(sharedPref.getString("magneticFieldDatastoreUUID","").isEmpty()) {
+                            String magneticFieldDatastoreUUID = createDatastore(params[0],"magneticfield", "MagneticField");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),magneticFieldDatastoreUUID, "TYPE_MAGNETIC_FIELD", "MAGNETIC_FIELD", "uT");
+                            editor.putString("magneticFieldDatastoreUUID", magneticFieldDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_PROXIMITY:     // cm
+                        if(sharedPref.getString("proximityDatastoreUUID","").isEmpty()) {
+                            String proximityDatastoreUUID = createDatastore(params[0],"proximity", "Proximity");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),proximityDatastoreUUID, "TYPE_PROXIMITY", "PROXIMITY", "cm");
+                            editor.putString("proximityDatastoreUUID", proximityDatastoreUUID);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_ROTATION_VECTOR:   // unita di misura sconosciuta
+                        if(sharedPref.getString("rotationVector","").isEmpty()) {
+                            String rotationVector = createDatastore(params[0],"rotationvector", "RotationVector");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),rotationVector, "TYPE_ROTATION_VECTOR", "ROTATION_VECTOR", "UNKNOWN");
+                            editor.putString("rotationVector", rotationVector);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_GRAVITY:      // m/s2
+                        if(sharedPref.getString("gravity","").isEmpty()) {
+                            String gravity = createDatastore(params[0],"gravity", "Gravity");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),gravity, "TYPE_GRAVITY", "GRAVITY", "m/s2");
+                            editor.putString("gravity", gravity);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_LINEAR_ACCELERATION:   // m/s2
+                        if(sharedPref.getString("linearAcceleration","").isEmpty()) {
+                            String linearAcceleration = createDatastore(params[0],"linearacceleration", "LinearAcceleration");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),linearAcceleration, "TYPE_LINEAR_ACCELERATION", "LINEAR_ACCELERATION", "m/s2");
+                            editor.putString("linearAcceleration", linearAcceleration);
+                            editor.apply();
+                        }
+                        break;
+
+                    case Sensor.TYPE_RELATIVE_HUMIDITY:     // %
+                        if(sharedPref.getString("relativeHumidity","").isEmpty()) {
+                            String relativeHumidity = createDatastore(params[0],"relativehumidity", "RelativeHumidity");
+                            insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""),relativeHumidity, "TYPE_RELATIVE_HUMIDITY", "RELATIVE_HUMIDITY", "%");
+                            editor.putString("relativeHumidity", relativeHumidity);
+                            editor.apply();
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+
+            return null;
+       /*     String temperatureDatastoreUUID = createDatastore(params[0],"temperature","Temperature");
             insertInSensorDatastore(sensorsDatastoreUUID,temperatureDatastoreUUID, "TYPE_TEMPERATURE", "TEMPERATURE", "celsius");
 
             String pressureDatastoreUUID = createDatastore(params[0],"pressure", "Pressure");
@@ -451,14 +620,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 data.put("lightDatastoreUUID", lightDatastoreUUID);
             }catch (JSONException e){
                 e.printStackTrace();
-            }
-            return data;
+            }*
+            return data;*/
         }
 
         @Override
         protected void onPostExecute(JSONObject data) {
-            try {
-                SharedPreferences.Editor editor = sharedPref.edit();
+         /*   try {
+               SharedPreferences.Editor editor = sharedPref.edit();
                 editor.putBoolean("isDeviceRegistered", true);
                 editor.putString("datasetName", data.getString("datasetName"));
                 editor.putString("datasetUUID", data.getString("datasetUUID"));
@@ -469,7 +638,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 editor.apply();
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
 
     }
