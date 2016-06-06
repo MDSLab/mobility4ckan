@@ -1,13 +1,3 @@
-/* TODO:
-*  1) Sensori selezionabili  --->>  OK
-*  2) Cambiare layout
-*  3) Scegliere nome dataset e fare controlli su CKAN
-*  4) Controlli su WIFI e GPS --->> OK
-*  5) Invio per spostamento (ogni tot metri)
-*  6) Vedere se siamo a piedi o in macchina
-*/
-
-
 package it.unime.embeddedsystems;
 
 import android.Manifest;
@@ -35,6 +25,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -71,20 +62,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double latitude;
     private double longitude;
     private MySensor mySensor;
-
     EditText nameText;
-
     private List<Sensor> sensorList = new ArrayList<>();
     boolean isDeviceCurrentSensorsRegistered = false;
-
-    private Activity mAct;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         sharedPref = getPreferences(Context.MODE_PRIVATE);
-        mAct = this;
         locationText = (TextView) findViewById(R.id.txv_gps);
         currentTempText = (TextView) findViewById(R.id.txv_temp);
         currentPressureText = (TextView) findViewById(R.id.txv_pressure);
