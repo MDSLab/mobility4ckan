@@ -21,6 +21,8 @@ import android.hardware.Sensor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
@@ -99,6 +101,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         System.out.println("Sensor List: "+sensorList);
 
+        if(isDeviceOnline()){
+            Toast.makeText(this, "ONLINE", Toast.LENGTH_LONG).show();
+        }
+        else{
+            Toast.makeText(this, "OFFLINE", Toast.LENGTH_LONG).show();
+        }
+
+        if(isGPSEnable()){
+            Toast.makeText(this, "GPS SPENTO", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "GPS ACCESO", Toast.LENGTH_SHORT).show();
+        }
+
         setDatasetName();
 
     }
@@ -131,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             }
                         }, 0, countdown);*/
                         }else{
+                            System.out.println("non entro");
                             nameText.getText().clear();
                         }
                     }
@@ -270,6 +286,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         Toast.makeText(getApplicationContext(), "GPS Avviato", Toast.LENGTH_LONG).show();
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+    }
+
+    private boolean isDeviceOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnected();
+    }
+
+    private boolean isGPSEnable() {
+        LocationManager mlocManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        return mlocManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
     private String getCurrentDate(){
