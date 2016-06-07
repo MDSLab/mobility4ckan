@@ -302,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     @Override
                     public void onClick(View view) {
                         datasetName = nameText.getText().toString().trim().toLowerCase();
-                        String regexp = "([a-z-_]|[0-9-_])";
+                        String regexp = "^[a-z-0-9_]*$";
                         Matcher matcher = Pattern.compile(regexp).matcher(datasetName);
 
                         if(matcher.find()) {
