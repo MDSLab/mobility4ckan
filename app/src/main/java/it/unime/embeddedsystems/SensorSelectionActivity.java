@@ -1,16 +1,21 @@
 package it.unime.embeddedsystems;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -18,6 +23,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by andfa on 01/06/2016.
@@ -32,11 +39,13 @@ public class SensorSelectionActivity extends AppCompatActivity {
     List<Sensor> list;
     List<DinamicView> dinamicViewList = new ArrayList<>();
     SharedPreferences sharedPref;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensor_selection);
+        context = this;
         sharedPref = getPreferences(Context.MODE_PRIVATE);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         listView = (ListView) findViewById(R.id.selection_listview);
@@ -78,16 +87,60 @@ public class SensorSelectionActivity extends AppCompatActivity {
             public void onClick(View v) {
                 SharedPreferences.Editor editor = sharedPref.edit();
                 Set<String> set = new HashSet<String>();
-                for(int k=0; k<SensorConfig.sensorList.size(); k++) {
+                for (int k = 0; k < SensorConfig.sensorList.size(); k++) {
                     set.add(SensorConfig.sensorList.get(k).getName());
                 }
                 editor.putStringSet("selectedSensors", set);
                 editor.apply();
-                Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                startActivity(intent);
+
+                DinamicView dinamicView = new DinamicView(getApplicationContext());
+                dinamicView.getNoteLabel().setText(getString(R.string.tempo_countdown));
+                dinamicView.getNoteLabel().setTextSize(12);
+
+                final EditText timerText = new EditText(getApplicationContext());
+                timerText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                timerText.setGravity(Gravity.CENTER);
+                timerText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                timerText.setTextColor(Color.BLACK);
+                timerText.setSingleLine(true);
+                timerText.setTextSize(18);
+
+                dinamicView.getBodyLayout().addView(timerText);
+                final AlertDialog mDialog = new AlertDialog.Builder(context)
+                        .setView(dinamicView)
+                        .setCancelable(false)
+                        .setPositiveButton("OK", null)
+                        .create();
+
+                mDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                    @Override
+                    public void onShow(DialogInterface dialog) {
+                        Button b = mDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                        b.setOnClickListener(new View.OnClickListener() {
+
+                            @Override
+                            public void onClick(View view) {
+                                String selectedTimerText = timerText.getText().toString().trim().toLowerCase();
+                                String regexp = "^[a-z-0-9_]*$";
+                                Matcher matcher = Pattern.compile(regexp).matcher(selectedTimerText);
+
+                                if (matcher.find()) {
+                                    mDialog.dismiss();
+                                    SensorConfig.countDownTimer = Integer.parseInt(selectedTimerText);
+                                    SensorConfig.countDownTimer *= 1000;
+                                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                                    startActivity(intent);
+                                } else {
+                                    timerText.getText().clear();
+                                    timerText.setError(getString(R.string.note_timer));
+                                }
+                            }
+                        });
+                    }
+                });
+                mDialog.show();
             }
         });
-
     }
 
     private void checkSensorsSelected(){

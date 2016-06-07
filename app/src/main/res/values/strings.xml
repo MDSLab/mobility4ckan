@@ -16,7 +16,9 @@
     <string name="nome_dataset">Nome dataset:</string>
     <string name="inserisci_nome_dataset">Inserisci il nome del dataset:</string>
     <string name="note_dialog">Il nome del dataset deve essere composto da caratteri alphanumerici e minuscoli. I caratteri speciali consentiti sono "-_"</string>
+    <string name="note_timer">Scelta non valida</string>
     <string name="placeholder">-</string>
     <string name="sei_offline">Sei offline. Accertati di avere internet disponibile e riapri l\'app</string>
     <string name="gps_disattivato">Attiva il GPS e riavvia l\'applicazione</string>
+    <string name="tempo_countdown">Ogni quanti secondi si intende inviare dati al server</string>
 </resources>

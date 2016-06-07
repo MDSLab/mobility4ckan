@@ -10,4 +10,5 @@ import java.util.List;
  */
 public class SensorConfig {
     public static List<Sensor> sensorList = new ArrayList<>();
+    public static int countDownTimer;
 }

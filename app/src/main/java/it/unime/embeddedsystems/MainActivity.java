@@ -1,3 +1,5 @@
+// Add countdown selector
+
 package it.unime.embeddedsystems;
 
 import android.Manifest;
@@ -56,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Button sendNowBtn;
     private SharedPreferences sharedPref;
     private int REQUEST_PERMISSION_LOCATION = 1;
-    private int countdown = 60*1000;
+    private int countdown;
     private String datasetName = "";
     private boolean isRegistering = false;
     private boolean isGPSReady = false;
@@ -90,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         countdownText = (TextView) findViewById(R.id.txv_countdown);
         datasetNameText = (TextView) findViewById(R.id.txv_dataset) ;
         listView = (ListView)findViewById(R.id.sensor_listview);
-
+        countdown = SensorConfig.countDownTimer;
         sendNowBtn = (Button) findViewById(R.id.btn_invia);
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -310,7 +312,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             datasetNameText.setText(datasetName);
                             startTimer();
                         }else{
-                            System.out.println("non entro");
                             nameText.getText().clear();
                             nameText.setError(getString(R.string.note_dialog));
                         }
