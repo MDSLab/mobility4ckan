@@ -10,6 +10,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -103,6 +104,7 @@ public class SensorSelectionActivity extends AppCompatActivity {
                 timerText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                 timerText.setTextColor(Color.BLACK);
                 timerText.setSingleLine(true);
+                timerText.setInputType(InputType.TYPE_CLASS_NUMBER);
                 timerText.setTextSize(18);
 
                 dinamicView.getBodyLayout().addView(timerText);
@@ -121,7 +123,7 @@ public class SensorSelectionActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View view) {
                                 String selectedTimerText = timerText.getText().toString().trim().toLowerCase();
-                                String regexp = "^[a-z-0-9_]*$";
+                                String regexp = "^[0-9]*$";
                                 Matcher matcher = Pattern.compile(regexp).matcher(selectedTimerText);
 
                                 if (matcher.find()) {
