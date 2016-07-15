@@ -1,4 +1,13 @@
-package it.unime.embeddedsystems;
+/*
+*                                Apache License
+*                           Version 2.0, January 2004
+*                        http://www.apache.org/licenses/
+*
+*      Copyright (c) 2016 Luca D'Amico, Andrea Faraone
+*
+*/
+
+package it.unime.mobility4ckan;
 
 import android.content.Context;
 import android.view.View;
@@ -7,9 +16,6 @@ import android.widget.BaseAdapter;
 
 import java.util.List;
 
-/**
- * Created by andfa on 04/06/2016.
- */
 public class SensorAdapter extends BaseAdapter {
 
     Context mContext;

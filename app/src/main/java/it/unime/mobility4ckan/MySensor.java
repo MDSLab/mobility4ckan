@@ -1,23 +1,40 @@
-package it.unime.embeddedsystems;
+/*
+*                                Apache License
+*                           Version 2.0, January 2004
+*                        http://www.apache.org/licenses/
+*
+*      Copyright (c) 2016 Luca D'Amico, Andrea Faraone, Giovanni Merlino
+*
+*/
 
+package it.unime.mobility4ckan;
+
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationListener;
+import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.List;
 
-class MySensor{
+class MySensor {
 
     Context mContext;
 
     SensorManager sensorManager;
+    LocationManager locationManager;
     Sensor tempSensor, pressureSensor, lightSensor;
     SensorEventListener tempSensorListener, pressureSensorListener, lightSensorListener;
 
-    float currentTemp, currentPressure, currentLight, currentHumidity, currentProximity;
+    float currentTemp, currentPressure, currentLight, currentHumidity, currentProximity, currentSpeed;
     float[] currentAcceleration, currentGyroscope, currentMagnetic, currentRotation, currentGravity, currentLinearAcceleration;
 
     List<Sensor> sensorList = new ArrayList<>();
@@ -27,12 +44,13 @@ class MySensor{
         mContext = context;
 
         sensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
+        locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
 
         currentAcceleration = new float[3];
         currentGyroscope = new float[3];
         currentMagnetic = new float[3];
         currentRotation = new float[3];
-        currentGravity  = new float[3];
+        currentGravity = new float[3];
         currentLinearAcceleration = new float[3];
 
         /*tempSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
@@ -46,12 +64,38 @@ class MySensor{
         */
     }
 
-    public void registerSensor(Sensor mSensor){
+    public void registerSensor(Sensor mSensor) {
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                //latitude = location.getLatitude();
+                //longitude = location.getLongitude();
+                currentSpeed = location.getSpeed();
+                //locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude)+ "  " +String.valueOf(speed));
+                //isGPSReady = true;
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+                //
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+                //
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+                //
+            }
+        };
+
         SensorEventListener sensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
 
-                switch (event.sensor.getType()){
+                switch (event.sensor.getType()) {
                     case Sensor.TYPE_AMBIENT_TEMPERATURE:   // Gradi Celsius (°C)
                         currentTemp = event.values[0];
                         break;
@@ -120,6 +164,18 @@ class MySensor{
             }
         };
 
+        //sensorManager.registerListener(locationListener, mSensor, LocationManager.GPS_PROVIDER);
+/*        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }*/
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         sensorManager.registerListener(sensorListener, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
@@ -212,6 +268,10 @@ class MySensor{
 
     public float getCurrentProximity() {
         return currentProximity;
+    }
+
+    public float getCurrentSpeed() {
+        return currentSpeed;
     }
 
     public String getCurrentAcceleration() {

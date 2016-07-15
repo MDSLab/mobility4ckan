@@ -1,4 +1,13 @@
-package it.unime.embeddedsystems;
+/*
+*                                Apache License
+*                           Version 2.0, January 2004
+*                        http://www.apache.org/licenses/
+*
+*      Copyright (c) 2016 Luca D'Amico, Andrea Faraone
+*
+*/
+
+package it.unime.mobility4ckan;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -7,9 +16,6 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/**
- * Created by andfa on 06/06/2016.
- */
 public class Overview extends LinearLayout {
 
     LinearLayout sensorLayout;

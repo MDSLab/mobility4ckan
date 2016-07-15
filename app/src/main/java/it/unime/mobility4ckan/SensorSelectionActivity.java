@@ -1,4 +1,13 @@
-package it.unime.embeddedsystems;
+/*
+*                                Apache License
+*                           Version 2.0, January 2004
+*                        http://www.apache.org/licenses/
+*
+*      Copyright (c) 2016 Luca D'Amico, Andrea Faraone, Giovanni Merlino
+*
+*/
+
+package it.unime.mobility4ckan;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,6 +20,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,11 +37,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by andfa on 01/06/2016.
- */
 public class SensorSelectionActivity extends AppCompatActivity {
 
+    private static final String TAG = "SensorSelectionActivity";
     ListView listView;
     Button button;
 
@@ -47,7 +55,7 @@ public class SensorSelectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensor_selection);
         context = this;
-        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref = getSharedPreferences("sharedprefs", MODE_PRIVATE);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         listView = (ListView) findViewById(R.id.selection_listview);
         list = sensorManager.getSensorList(Sensor.TYPE_ALL);
@@ -94,9 +102,9 @@ public class SensorSelectionActivity extends AppCompatActivity {
                 editor.putStringSet("selectedSensors", set);
                 editor.apply();
 
-                DinamicView dinamicView = new DinamicView(getApplicationContext());
-                dinamicView.getNoteLabel().setText(getString(R.string.tempo_countdown));
-                dinamicView.getNoteLabel().setTextSize(12);
+                DinamicView timerView = new DinamicView(getApplicationContext());
+                timerView.getNoteLabel().setText(getString(R.string.tempo_countdown));
+                timerView.getNoteLabel().setTextSize(12);
 
                 final EditText timerText = new EditText(getApplicationContext());
                 timerText.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -107,18 +115,18 @@ public class SensorSelectionActivity extends AppCompatActivity {
                 timerText.setInputType(InputType.TYPE_CLASS_NUMBER);
                 timerText.setTextSize(18);
 
-                dinamicView.getBodyLayout().addView(timerText);
-                final AlertDialog mDialog = new AlertDialog.Builder(context)
-                        .setView(dinamicView)
+                timerView.getBodyLayout().addView(timerText);
+                final AlertDialog timerMDialog = new AlertDialog.Builder(context)
+                        .setView(timerView)
                         .setCancelable(false)
                         .setPositiveButton("OK", null)
                         .create();
 
-                mDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                timerMDialog.setOnShowListener(new DialogInterface.OnShowListener() {
                     @Override
                     public void onShow(DialogInterface dialog) {
-                        Button b = mDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                        b.setOnClickListener(new View.OnClickListener() {
+                        Button tb = timerMDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                        tb.setOnClickListener(new View.OnClickListener() {
 
                             @Override
                             public void onClick(View view) {
@@ -127,7 +135,7 @@ public class SensorSelectionActivity extends AppCompatActivity {
                                 Matcher matcher = Pattern.compile(regexp).matcher(selectedTimerText);
 
                                 if (matcher.find()) {
-                                    mDialog.dismiss();
+                                    timerMDialog.dismiss();
                                     SensorConfig.countDownTimer = Integer.parseInt(selectedTimerText);
                                     SensorConfig.countDownTimer *= 1000;
                                     Intent intent = new Intent(getBaseContext(), MainActivity.class);
@@ -140,8 +148,57 @@ public class SensorSelectionActivity extends AppCompatActivity {
                         });
                     }
                 });
-                mDialog.show();
-            }
+                timerMDialog.show();
+
+                DinamicView apiView = new DinamicView(getApplicationContext());
+                apiView.getNoteLabel().setText(getString(R.string.apikey_req));
+                apiView.getNoteLabel().setTextSize(12);
+
+                final EditText apiKey = new EditText(getApplicationContext());
+                apiKey.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                apiKey.setGravity(Gravity.CENTER);
+                apiKey.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                apiKey.setTextColor(Color.BLACK);
+                apiKey.setSingleLine(true);
+                apiKey.setInputType(InputType.TYPE_CLASS_TEXT);
+                apiKey.setTextSize(18);
+
+                apiView.getBodyLayout().addView(apiKey);
+                final AlertDialog apiMDialog = new AlertDialog.Builder(context)
+                        .setView(apiView)
+                        .setCancelable(false)
+                        .setPositiveButton("OK", null)
+                        .create();
+
+                apiMDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                    @Override
+                    public void onShow(DialogInterface dialog) {
+                        Button akb = apiMDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                        akb.setOnClickListener(new View.OnClickListener() {
+
+                            @Override
+                            public void onClick(View view) {
+                                Log.i(TAG, "apiKey set to " + apiKey);
+                                String selectedApiKey = apiKey.getText().toString().trim().toLowerCase();
+                                Log.i(TAG, "selectedApiKey set to " + selectedApiKey);
+                                String regexp = "^[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}$";
+                                Matcher matcher = Pattern.compile(regexp).matcher(selectedApiKey);
+
+                                if (matcher.find()) {
+                                    apiMDialog.dismiss();
+                                    SharedPreferences.Editor editor = sharedPref.edit();
+                                    editor.putString("userAPIkey", selectedApiKey);
+                                    editor.apply();
+                                } else {
+                                    timerText.getText().clear();
+                                    timerText.setError(getString(R.string.note_timer));
+                                }
+                            }
+                        });
+                    }
+                });
+                apiMDialog.show();
+             }
         });
     }
 

@@ -1,4 +1,13 @@
-package it.unime.embeddedsystems;
+/*
+*                                Apache License
+*                           Version 2.0, January 2004
+*                        http://www.apache.org/licenses/
+*
+*      Copyright (c) 2016 Luca D'Amico, Andrea Faraone
+*
+*/
+
+package it.unime.mobility4ckan;
 
 import org.junit.Test;
 

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Embedded System</string>
+    <string name="app_name">Mobility 4 CKAN</string>
     <string name="location_permission_request_text">Autorizzi l\'applicazione ad utilizzare il GPS?</string>
     <string name="location_permission_denied_text">Permesso negato! l\'applicazione non può funzionare senza GPS!</string>
     <string name="attendo_gps">Attendo GPS...</string>
@@ -21,4 +21,5 @@
     <string name="sei_offline">Sei offline. Accertati di avere internet disponibile e riapri l\'app</string>
     <string name="gps_disattivato">Attiva il GPS e riavvia l\'applicazione</string>
     <string name="tempo_countdown">Ogni quanti secondi si intende inviare dati al server</string>
+    <string name="apikey_req">Immettere l\'API key per l\'upload su CKAN</string>
 </resources>

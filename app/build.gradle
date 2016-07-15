@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "it.unime.embeddedsystems"
+        applicationId "it.unime.mobility4ckan"
         minSdkVersion 19
         targetSdkVersion 23
         versionCode 1
@@ -25,7 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
-    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.4'
 
 }

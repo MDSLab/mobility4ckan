@@ -1,6 +1,15 @@
+/*
+*                                Apache License
+*                           Version 2.0, January 2004
+*                        http://www.apache.org/licenses/
+*
+*      Copyright (c) 2016 Luca D'Amico, Andrea Faraone, Giovanni Merlino
+*
+*/
+
 // Add countdown selector
 
-package it.unime.embeddedsystems;
+package it.unime.mobility4ckan;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -24,6 +33,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,22 +64,26 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
+    private static final String TAG = "MainActivity";
     private TextView locationText, countdownText, datasetNameText;
     private Button sendNowBtn;
     private SharedPreferences sharedPref;
     private int REQUEST_PERMISSION_LOCATION = 1;
     private int countdown;
+    private String apikey = "";
     private String datasetName = "";
     private boolean isRegistering = false;
     private boolean isGPSReady = false;
     private double latitude;
     private double longitude;
+    private float speed;
     private MySensor mySensor;
     private EditText nameText;
     private ListView listView;
     private List<Overview> overviewList = new ArrayList<>();
     private List<Sensor> sensorList = new ArrayList<>();
     private boolean isDeviceCurrentSensorsRegistered = false;
+    private String lastSpeedValue = "";
     private String lastTempValue = "";
     private String lastPressureValue = "";
     private String lastLightValue = "";
@@ -87,12 +101,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        sharedPref = getPreferences(Context.MODE_PRIVATE);
+        sharedPref = getSharedPreferences("sharedprefs", MODE_PRIVATE);
         locationText = (TextView) findViewById(R.id.txv_gps);
         countdownText = (TextView) findViewById(R.id.txv_countdown);
         datasetNameText = (TextView) findViewById(R.id.txv_dataset) ;
         listView = (ListView)findViewById(R.id.sensor_listview);
         countdown = SensorConfig.countDownTimer;
+        apikey = sharedPref.getString("userAPIkey","");
         sendNowBtn = (Button) findViewById(R.id.btn_invia);
         sendNowBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -171,6 +186,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         overviewTitle.setCurrentValue("Valore Corrente");
         overviewTitle.setValueSend("Valore Inviato");
         overviewList.add(overviewTitle);
+
+        Overview overview0 = new Overview(getApplicationContext());
+        overview0.setSensorName("Speed");
+        overview0.setCurrentValue(""+mySensor.getCurrentSpeed());
+        overview0.setValueSend(lastSpeedValue);
+        overviewList.add(overview0);
 
         for (int k=0; k<sensorList.size(); k++){
             Overview overview = new Overview(getApplicationContext());
@@ -426,7 +447,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void onLocationChanged(Location location) {
         latitude = location.getLatitude();
         longitude = location.getLongitude();
-        locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude));
+        speed = location.getSpeed();
+        locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude)+ "  " +String.valueOf(speed));
+        //locationText.setText(String.valueOf(latitude)+ "  " +String.valueOf(longitude));
         isGPSReady = true;
     }
 
@@ -497,6 +520,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         if(!isDeviceCurrentSensorsRegistered || !isGPSReady) {
             return;
         }
+
+        String currentSpeedValue = ""+mySensor.getCurrentSpeed();
+        getSensorDataToSend("speedDatastoreUUID", "Speed", currentSpeedValue);
+        lastSpeedValue = currentSpeedValue;
 
         for(int k=0; k<sensorList.size();k++){
             switch (sensorList.get(k).getType()){
@@ -601,7 +628,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             String datasetUUID = "";
             try {
                 String command = "{\"name\":\""+datasetName+"\", \"title\":\""+datasetName+"\", \"owner_org\":\"test\", \"extras\":{\"Label\":\"android-phone\",\"Manufacturer\":\"Android\", \"Model\":\"smartphone\",\"Altitude\":0,\"Latitude\":0,\"Longitude\":0}}";
-                JSONObject response = POST("http://smartme-data.unime.it/api/rest/dataset", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Dataset
+                Log.i(TAG, "apikey set to " + apikey);
+                JSONObject response = POST("http://smartme-data.unime.it/api/rest/dataset", apikey, command); // Create Dataset
 
                 if(response==null){
                     runOnUiThread(new Runnable() {
@@ -627,7 +655,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             try {
                 String command = "{\"resource\": {\"package_id\":\""+datasetName+"\", \"name\":\""+datastoreName+"\"}, \"fields\": [ {\"id\": \"Type\", \"type\":\"text\"}, {\"id\": \"Model\", \"type\":\"text\"}, {\"id\": \"Unit\", \"type\":\"text\"}, {\"id\": \"FabricName\", \"type\":\"text\"}, {\"id\": \"ResourceID\", \"type\":\"text\"}, {\"id\": \"Date\", \"type\":\"timestamp\"}] }";
 
-                JSONObject response = POST("http://smartme-data.unime.it/api/3/action/datastore_create", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Datastore
+                JSONObject response = POST("http://smartme-data.unime.it/api/3/action/datastore_create", apikey, command); // Create Datastore
                 JSONObject result = new JSONObject(response.getString("result"));
                 datastoreUUID = result.getString("resource_id");
             }catch (JSONException e){
@@ -641,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             try {
                 String command = "{\"resource\": {\"package_id\":\""+datasetName+"\", \"name\":\""+datastoreName+"\"}, \"fields\": [ {\"id\": \"Date\", \"type\":\"timestamp\"}, {\"id\": \""+modelName+"\", \"type\":\"text\"}, {\"id\": \"Altitude\", \"type\":\"numeric\"}, {\"id\": \"Latitude\", \"type\":\"numeric\"}, {\"id\": \"Longitude\", \"type\":\"numeric\"}] }";
 
-                JSONObject response = POST("http://smartme-data.unime.it/api/3/action/datastore_create", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Create Datastore
+                JSONObject response = POST("http://smartme-data.unime.it/api/3/action/datastore_create", apikey, command); // Create Datastore
                 JSONObject result = new JSONObject(response.getString("result"));
                 datastoreUUID = result.getString("resource_id");
             }catch (JSONException e){
@@ -653,7 +681,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         void insertInSensorDatastore(String sensorUUID, String measureUUID, String type, String name, String unit){
             String command = "{\"resource_id\":\""+sensorUUID+"\", \"method\":\"insert\", \"records\":[{\"Type\":\""+type+"\",\"Model\":\""+name+"\",\"Unit\":\""+unit+"\",\"FabricName\":\"-\",\"ResourceID\":\""+measureUUID+"\",\"Date\":\"2016-05-13T12:00:00\"}]}";
 
-            POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Insert in Datastore
+            POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", apikey, command); // Insert in Datastore
         }
 
         @Override
@@ -671,6 +699,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 editor.putString("datasetName", params[0]);
                 editor.putString("datasetUUID", datasetUUID);
                 editor.putString("sensorsDatastoreUUID", sensorsDatastoreUUID);
+                editor.apply();
+            }
+
+            if(sharedPref.getString("speedDatastoreUUID","").isEmpty()) {
+                String speedDatastoreUUID = createDatastore(params[0], "speed", "Speed");
+                insertInSensorDatastore(sharedPref.getString("sensorsDatastoreUUID",""), speedDatastoreUUID, "TYPE_GPS_SPEED", "GPS", "m/s");
+                editor.putString("speedDatastoreUUID", speedDatastoreUUID);
                 editor.apply();
             }
 
@@ -795,7 +830,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         void insertInDatastore(String measureUUID, String sensorName, String sensorValue, String lat, String lon, String date){
             String command = "{\"resource_id\":\""+measureUUID+"\", \"method\":\"insert\", \"records\":[{\"Latitude\":\""+lat+"\",\"Altitude\":\"0\",\"Date\":\""+date+"\",\""+sensorName+"\":\""+sensorValue+"\",\"Longitude\":\""+lon+"\"}]}";
-            POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", "22c5cfa7-9dea-4dd9-9f9d-eedf296852ae", command); // Insert in Datastore
+            POST("http://smartme-data.unime.it/api/3/action/datastore_upsert", apikey, command); // Insert in Datastore
         }
 
         @Override
